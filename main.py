@@ -127,18 +127,18 @@ def plot_explore_ev_area(sorted_scores, only_top_x=None, save_img=True, name="yo
     # Colorbar.
     ticks = np.linspace(min_val, max_val, 10, endpoint=True)
     cbar = plt.colorbar(sc, cax=color_axis, ticks=ticks)
-    cbar.set_label('$col bar$', fontsize=21, labelpad=-2)
+    cbar.set_label('Average score for aiming spot', fontsize=21, labelpad=-2)
 
     draw_board(ax0)
     if save_img:
         filename = name
         if only_top_x is not None:
             filename += f"_top{only_top_x}"
-        plt.savefig("img/"+filename, format="pdf",  bbox_inches='tight')
+        plt.savefig("img/"+filename, format="png",  bbox_inches='tight')
     plt.show()
 
 
-def ev_area(x_avg, y_avg, sigma_x, sigma_y, size=100, plot=True):
+def ev_area(x_avg, y_avg, sigma_x, sigma_y, size=100, plot=True, save_img=False, name="forgottoname"):
     mean = [x_avg, y_avg]
     cov = [[sigma_x**2, 0], [0, sigma_y**2]]
 
@@ -153,7 +153,7 @@ def ev_area(x_avg, y_avg, sigma_x, sigma_y, size=100, plot=True):
         sum += value
     sum = sum/(size**2)
 
-    if plot:
+    if plot or save_img:
         # plt.scatter(final_xs, final_ys, final_scores, cmap='hot')
         # Set the figure size
         plt.rcParams["figure.figsize"] = [10.0, 10.0]
@@ -164,8 +164,11 @@ def ev_area(x_avg, y_avg, sigma_x, sigma_y, size=100, plot=True):
         plt.text(0, 0, f"{sum:.1f}", fontsize=40)
         plt.xlim([-0.5, 0.5])
         plt.ylim([-0.5, 0.5])
+        if save_img:
+            plt.savefig("img/"+name, format="png",  bbox_inches='tight')
 
-        plt.show()
+        if plot:
+            plt.show()
     return sum
 
 
@@ -218,20 +221,24 @@ def draw_board(ax=None):
 # # Aiming at ~~triple 11
 # ev_area(0.1, (triple_ext_diam/2 - border/2)/total_diam, 0, 0, size=2)
 
-# # Probably what my throws look like:
-ev_area(0.0, 0.0, 0.15, 0.09, size=50)
-# The ideal shot apparently
-ev_area(-0.06, 0.24, 0.15, 0.09, size=50)
-# A good player would throw like this maybe
-# ev_area(0.0, 0.0, 0.07, 0.07, size=50)
 
+# Probably what my throws look like 0.15, 0.09
+ev_area(0.0, 0.0, 0.15, 0.09, size=50, save_img=True, name="sx0.15_sy0.09_center")
+# The ideal shot apparently
+ev_area(-0.06, 0.24, 0.15, 0.09, size=50, save_img=True, name="sx0.15_sy0.09_ideal")
+# What happens when aiming at the triple 20
+ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0.15, 0.09, size=50, save_img=True, name="sx0.15_sy0.09_triple_20")
 
 # sorted_scores = explore_ev_area(51, 0.15, 0.09, size=100)
-# sorted_scores = explore_ev_area(51, 0.07, 0.07, size=100)
-# sorted_scores = pickle.load(open("sorted_spots2601_size10000_sx0.07_sy0.07", "rb"))
 
 filename = "sorted_spots2601_size10000_sx0.15_sy0.09"
 sorted_scores = pickle.load(open(filename, "rb"))
 plot_explore_ev_area(sorted_scores, only_top_x=None, save_img=True, name=filename)
 plot_explore_ev_area(sorted_scores, only_top_x=100, save_img=True, name=filename)
 plot_explore_ev_area(sorted_scores, only_top_x=1, save_img=True, name=filename)
+
+# A good player would throw like this maybe
+# ev_area(0.0, 0.0, 0.07, 0.07, size=50)
+
+# sorted_scores = explore_ev_area(51, 0.07, 0.07, size=100)
+# sorted_scores = pickle.load(open("sorted_spots2601_size10000_sx0.07_sy0.07", "rb"))
