@@ -6,6 +6,15 @@ A simple Python program to solve the game of darts. More precisely, if the accur
 Should you aim for triple 20? For the bull's eye? Something else? The answer actually depends on your skill level.
 
 # Results
+TL&DR: 
+- Unless you're an excellent player, aiming at the triple 20 is a trap.
+- If you're bad, aim for the center and pray
+- If you're in between, the optimal aiming spot changes depending on your skill level. You can use this library to output a tailored aim map.
+
+Optimal aiming spots for (from left to right) a bad player, an average player, a good player and an excellent player
+![](2022-12-25-23-55-44.png)
+
+
 Below several simulations for several types of players.
 
 ## Excellent player with sigma_x=0.02 and sigma_y=0.02
