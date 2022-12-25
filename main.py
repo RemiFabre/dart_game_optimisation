@@ -222,23 +222,66 @@ def draw_board(ax=None):
 # ev_area(0.1, (triple_ext_diam/2 - border/2)/total_diam, 0, 0, size=2)
 
 
-# Probably what my throws look like 0.15, 0.09
-ev_area(0.0, 0.0, 0.15, 0.09, size=50, save_img=True, name="sx0.15_sy0.09_center")
+
+# ## Average player 0.15, 0.09
+# ev_area(0.0, 0.0, 0.15, 0.09, size=50, save_img=True, name="sx0.15_sy0.09_center")
+# # The ideal shot apparently
+# ev_area(-0.06, 0.24, 0.15, 0.09, size=50, save_img=True, name="sx0.15_sy0.09_ideal")
+# # What happens when aiming at the triple 20
+# ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0.15, 0.09, size=50, save_img=True, name="sx0.15_sy0.09_triple_20")
+
+# # sorted_scores = explore_ev_area(51, 0.15, 0.09, size=100)
+
+# filename = "sorted_spots2601_size10000_sx0.15_sy0.09"
+# sorted_scores = pickle.load(open(filename, "rb"))
+# plot_explore_ev_area(sorted_scores, only_top_x=None, save_img=True, name=filename)
+# plot_explore_ev_area(sorted_scores, only_top_x=100, save_img=True, name=filename)
+# plot_explore_ev_area(sorted_scores, only_top_x=1, save_img=True, name=filename)
+
+
+# # Good player 0.07, 0.07
+# ev_area(0.0, 0.0, 0.07, 0.07, size=50, save_img=True, name="sx0.07_sy0.07_center")
+# # The ideal shot apparently
+# ev_area(-0.3, 0.12, 0.07, 0.07, size=50, save_img=True, name="sx0.07_sy0.07_ideal")
+# # What happens when aiming at the triple 20
+# ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0.07, 0.07, size=50, save_img=True, name="sx0.07_sy0.07_triple_20")
+
+# # sorted_scores = explore_ev_area(51, 0.07, 0.07, size=100)
+
+# filename = "sorted_spots2601_size10000_sx0.07_sy0.07"
+# sorted_scores = pickle.load(open(filename, "rb"))
+# plot_explore_ev_area(sorted_scores, only_top_x=None, save_img=True, name=filename)
+# plot_explore_ev_area(sorted_scores, only_top_x=100, save_img=True, name=filename)
+# plot_explore_ev_area(sorted_scores, only_top_x=1, save_img=True, name=filename)
+
+
+# ## Bad player 0.2, 0.2
+# ev_area(0.0, 0.0, 0.2, 0.2, size=50, save_img=True, name="sx0.2_sy0.2_center")
+# # The ideal shot apparently
+# ev_area(-0.020, 0.0999999, 0.2, 0.2, size=50, save_img=True, name="sx0.2_sy0.2_ideal")
+# # What happens when aiming at the triple 20
+# ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0.2, 0.2, size=50, save_img=True, name="sx0.2_sy0.2_triple_20")
+
+# # sorted_scores = explore_ev_area(51, 0.2, 0.2, size=100)
+
+# filename = "sorted_spots2601_size10000_sx0.2_sy0.2"
+# sorted_scores = pickle.load(open(filename, "rb"))
+# plot_explore_ev_area(sorted_scores, only_top_x=None, save_img=True, name=filename)
+# plot_explore_ev_area(sorted_scores, only_top_x=100, save_img=True, name=filename)
+# plot_explore_ev_area(sorted_scores, only_top_x=1, save_img=True, name=filename)
+
+
+## Excellent player 0.02, 0.02
+ev_area(0.0, 0.0, 0.02, 0.02, size=50, save_img=True, name="sx0.02_sy0.02_center")
 # The ideal shot apparently
-ev_area(-0.06, 0.24, 0.15, 0.09, size=50, save_img=True, name="sx0.15_sy0.09_ideal")
+ev_area(0.3, 0.0, 0.02, 0.02, size=50, save_img=True, name="sx0.02_sy0.02_ideal")
 # What happens when aiming at the triple 20
-ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0.15, 0.09, size=50, save_img=True, name="sx0.15_sy0.09_triple_20")
+ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0.02, 0.02, size=50, save_img=True, name="sx0.02_sy0.02_triple_20")
 
-# sorted_scores = explore_ev_area(51, 0.15, 0.09, size=100)
+# sorted_scores = explore_ev_area(51, 0.02, 0.02, size=100)
 
-filename = "sorted_spots2601_size10000_sx0.15_sy0.09"
+filename = "sorted_spots2601_size10000_sx0.02_sy0.02"
 sorted_scores = pickle.load(open(filename, "rb"))
 plot_explore_ev_area(sorted_scores, only_top_x=None, save_img=True, name=filename)
 plot_explore_ev_area(sorted_scores, only_top_x=100, save_img=True, name=filename)
 plot_explore_ev_area(sorted_scores, only_top_x=1, save_img=True, name=filename)
-
-# A good player would throw like this maybe
-# ev_area(0.0, 0.0, 0.07, 0.07, size=50)
-
-# sorted_scores = explore_ev_area(51, 0.07, 0.07, size=100)
-# sorted_scores = pickle.load(open("sorted_spots2601_size10000_sx0.07_sy0.07", "rb"))
