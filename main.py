@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle
 
 numbers = [20, 5, 12, 9, 14, 11, 8, 16, 7, 19, 3, 17, 2, 15, 10, 6, 13, 4, 18, 1]
 
@@ -64,57 +65,51 @@ def explore_darts(points_per_line):
         print(f"{values} at {coords}")
 
 
-def explore_ev_area(points_per_line, sigma_x, sigma_y):
+def explore_ev_area(points_per_line, sigma_x, sigma_y, size=50):
     scores = {}
+    size = 10
+    filename = f"sorted_spots{points_per_line**2}_size{size**2}_sx{sigma_x}_sy{sigma_y}"
     for i in range(points_per_line):
         for j in range(points_per_line):
             x = -0.5+i*(1/(points_per_line-1))
             y = -0.5+j*(1/(points_per_line-1))
-            ev = ev_area(x, y, sigma_x, sigma_y, size=50)
+            ev = ev_area(x, y, sigma_x, sigma_y, size=size, plot=False)
             scores[(x, y)] = ev
-            print(f"EV={ev} for x,y= {x}, {y} and sigma_x={sigma_x} sigma_y={sigma_y}")
+            # print(f"EV={ev} for x,y= {x}, {y} and sigma_x={sigma_x} sigma_y={sigma_y}")
 
-    sorted_scores = dict(sorted(scores.items(), key=lambda item: item[1]))
-    for coords, values in sorted_scores.items():
-        print(f"{values} at {coords}")
+    sorted_scores = dict(sorted(scores.items(), key=lambda item: item[1], reverse=True))
+    pickle.dump(sorted_scores, open(filename, "wb"))
+    return sorted_scores
 
-# def ev_area(x_avg, y_avg, sigma_x, sigma_y, size=100):
-#     # We'll generate size*size points
 
-#     # s = np.random.normal(mu, sigma, 1000)
-#     # count, bins, ignored = plt.hist(s, 30, density=True)
-#     # plt.plot(bins, 1/(sigma * np.sqrt(2 * np.pi)) *
-#     #          np.exp(- (bins - mu)**2 / (2 * sigma**2)),
-#     #          linewidth=2, color='r')
-#     # plt.show()
+def plot_explore_ev_area(sorted_scores):
+    final_xs = []
+    final_ys = []
+    final_scores = []
+    i = 0
+    for coords, value in sorted_scores.items():
+        print(f"{value} at {coords}")
+        final_xs.append(coords[0])
+        final_ys.append(coords[1])
+        final_scores.append(value)
+        i += 1
+        if i >= 500:
+            # pass
+            break
 
-#     # Set the figure size
-#     plt.rcParams["figure.figsize"] = [10.0, 10.0]
-#     plt.rcParams["figure.autolayout"] = True
+    # plt.scatter(final_xs, final_ys, final_scores, cmap='hot')
+        # Set the figure size
+    plt.rcParams["figure.figsize"] = [10.0, 10.0]
+    plt.rcParams["figure.autolayout"] = True
+    # Inverting x->y and y->-x because the referentials in matpotlib are different that the one we choose for our board
+    # plt.scatter(final_ys*-1.0, final_xs, marker=".")
+    plt.scatter(np.array(final_ys)*-1.0, np.array(final_xs), c=np.array(final_scores), cmap='seismic')
 
-#     # s = np.random.normal((x, y), (sigma, sigma), size=[2])
-#     xs = np.random.normal(x_avg, sigma_x, size=[size])
-#     ys = np.random.normal(y_avg, sigma_y, size=[size])
-#     final_xs = []
-#     final_ys = []
-#     final_scores = []
-#     sum = 0
-#     for x in xs:
-#         for y in ys:
-#             value, _ = get_score(x, y)
-#             final_xs.append(x)
-#             final_ys.append(y)
-#             final_scores.append(value)
-#             sum += value
-#     sum = sum/(size**2)
-#     # print(f"EV={sum} for x,y= {x_avg}, {y_avg} and sigma={sigma}")
-#     # Scatter plot
-#     plt.scatter(final_xs, final_ys, final_scores, cmap='hot')
-#     # plt.scatter(s[:, 0], s[:, 1])
+    draw_board()
+    plt.xlim([-0.5, 0.5])
+    plt.ylim([-0.5, 0.5])
 
-#     # Display the plot
-#     plt.show()
-#     return sum
+    plt.show()
 
 
 def ev_area(x_avg, y_avg, sigma_x, sigma_y, size=100, plot=True):
@@ -188,11 +183,10 @@ def draw_board():
 # # Aiming at ~~triple 11
 # ev_area(0.1, (triple_ext_diam/2 - border/2)/total_diam, 0, 0, size=2)
 
-ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0.02, 0.02, size=50)
-ev_area(0.0, 0.0, 0.02, 0.02, size=50)
-
-# ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0.1, 0.1, size=50)
-# ev_area(0.0, 0.0, 0.1, 0.1, size=50)
+# # Probably what my throws look like:
+# ev_area(0.0, 0.0, 0.15, 0.09, size=50)
 
 
-# explore_ev_area(50, 0.5, 0.0000005)
+# sorted_scores = explore_ev_area(50, 0.15, 0.09, size=100)
+sorted_scores = pickle.load(open("sorted_spots2500_size10000_sx0.15_sy0.09", "rb"))
+plot_explore_ev_area(sorted_scores)
