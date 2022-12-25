@@ -184,9 +184,9 @@ def draw_board():
 # ev_area(0.1, (triple_ext_diam/2 - border/2)/total_diam, 0, 0, size=2)
 
 # # Probably what my throws look like:
-# ev_area(0.0, 0.0, 0.15, 0.09, size=50)
+ev_area(0.0, 0.0, 0.15, 0.09, size=50)
 
 
 # sorted_scores = explore_ev_area(50, 0.15, 0.09, size=100)
-sorted_scores = pickle.load(open("sorted_spots2500_size10000_sx0.15_sy0.09", "rb"))
-plot_explore_ev_area(sorted_scores)
+# sorted_scores = pickle.load(open("sorted_spots2500_size10000_sx0.15_sy0.09", "rb"))
+# plot_explore_ev_area(sorted_scores)
