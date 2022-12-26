@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import traceback
 
 numbers = [20, 5, 12, 9, 14, 11, 8, 16, 7, 19, 3, 17, 2, 15, 10, 6, 13, 4, 18, 1]
 
@@ -15,15 +16,12 @@ border = 8.0
 triple_ext_diam = 214.0
 total_diam = 340.0
 
-# Measurements made on my board.
+# Measurements made on my board (doesn't seem to change the results)
 # bull_eye_diam = 13.5
-# bull_green_diam = 23.5
+# bull_green_diam = 33.5
 # border = 10.0
 # triple_ext_diam = 212.5
 # total_diam = 340.05
-
-
-# Calculate distance from center of board
 
 
 def get_score(x, y):
@@ -99,7 +97,7 @@ def plot_explore_ev_area(sorted_scores, only_top_x=None, save_img=True, name="yo
     min_val = 9999999
     max_val = 0
     for coords, value in sorted_scores.items():
-        print(f"{value} at {coords}")
+        # print(f"{value} at {coords}")
         final_xs.append(coords[0])
         final_ys.append(coords[1])
         final_scores.append(value)
@@ -207,81 +205,82 @@ def draw_board(ax=None):
         ax.add_patch(circle6)
 
 
-# Testing area
+def optimal_for_player(sigma_x, sigma_y, nb_spots_per_line=51, nb_shots_per_spot_per_line=100, save_img=True):
+    total_spots = nb_spots_per_line**2
+    shots_per_spot = nb_shots_per_spot_per_line**2
+    total_shots = shots_per_spot*total_spots
+    print(f"total_spots={total_spots}, shots_per_spot={shots_per_spot}, total_shots={total_shots}")
+    name_root = f"sx{sigma_x}_sy{sigma_y}"
+    print(f"If the player threw {shots_per_spot} aiming at the center, it would look like this:")
+    ev_area(0.0, 0.0, sigma_x, sigma_y, size=nb_shots_per_spot_per_line, save_img=save_img, name=name_root+"_center")
+    print(f"If the player threw {shots_per_spot} aiming at the triple 20, it would look like this:")
+    ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, sigma_x, sigma_y,
+            size=nb_shots_per_spot_per_line, save_img=save_img, name=name_root+"_triple_20")
 
-# print(get_score(0.25, 0.0))
-# explore_darts(100)
-# ev_area(0.0, 0.0, 0.2, 0.1, size=50)
+    filename = f"sorted_spots{total_spots}_size{shots_per_spot}_{name_root}"
+    print(f"Looking for a pickle file at: {filename}")
+    try:
+        with open(filename, "rb") as f:
+            sorted_scores = pickle.load(f)
+            print("File found! No need to redo the calculations")
+    except Exception as e:
+        # Catching all because we print the traceback and the action is always the same
+        print(traceback.format_exc(e))
+        sorted_scores = None
 
-# ## Testing perfect accuracy to check coordinates and stuff
-# # Aiming at triple 20
-# ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0, 0, size=2)
-# # Aiming at triple 14
-# ev_area(0.0, (triple_ext_diam/2 - border/2)/total_diam, 0, 0, size=2)
-# # Aiming at ~~triple 11
-# ev_area(0.1, (triple_ext_diam/2 - border/2)/total_diam, 0, 0, size=2)
+    if sorted_scores is None:
+        print(f"No pickle file containing the calculations was found, doing the calculations (can take a while)")
+        sorted_scores = explore_ev_area(nb_spots_per_line, sigma_x, sigma_y, size=nb_shots_per_spot_per_line)
+    print("Expected value of all aiming spots:")
+    plot_explore_ev_area(sorted_scores, only_top_x=None, save_img=save_img, name=filename)
+    print("Expected value of the top 100 aiming spots")
+    plot_explore_ev_area(sorted_scores, only_top_x=100, save_img=save_img, name=filename)
+    print("Expected value of THE best aiming spot")
+    plot_explore_ev_area(sorted_scores, only_top_x=1, save_img=save_img, name=filename)
 
-
-
-# ## Average player 0.15, 0.09
-# ev_area(0.0, 0.0, 0.15, 0.09, size=50, save_img=True, name="sx0.15_sy0.09_center")
-# # The ideal shot apparently
-# ev_area(-0.06, 0.24, 0.15, 0.09, size=50, save_img=True, name="sx0.15_sy0.09_ideal")
-# # What happens when aiming at the triple 20
-# ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0.15, 0.09, size=50, save_img=True, name="sx0.15_sy0.09_triple_20")
-
-# # sorted_scores = explore_ev_area(51, 0.15, 0.09, size=100)
-
-# filename = "sorted_spots2601_size10000_sx0.15_sy0.09"
-# sorted_scores = pickle.load(open(filename, "rb"))
-# plot_explore_ev_area(sorted_scores, only_top_x=None, save_img=True, name=filename)
-# plot_explore_ev_area(sorted_scores, only_top_x=100, save_img=True, name=filename)
-# plot_explore_ev_area(sorted_scores, only_top_x=1, save_img=True, name=filename)
-
-
-# # Good player 0.07, 0.07
-# ev_area(0.0, 0.0, 0.07, 0.07, size=50, save_img=True, name="sx0.07_sy0.07_center")
-# # The ideal shot apparently
-# ev_area(-0.3, 0.12, 0.07, 0.07, size=50, save_img=True, name="sx0.07_sy0.07_ideal")
-# # What happens when aiming at the triple 20
-# ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0.07, 0.07, size=50, save_img=True, name="sx0.07_sy0.07_triple_20")
-
-# # sorted_scores = explore_ev_area(51, 0.07, 0.07, size=100)
-
-# filename = "sorted_spots2601_size10000_sx0.07_sy0.07"
-# sorted_scores = pickle.load(open(filename, "rb"))
-# plot_explore_ev_area(sorted_scores, only_top_x=None, save_img=True, name=filename)
-# plot_explore_ev_area(sorted_scores, only_top_x=100, save_img=True, name=filename)
-# plot_explore_ev_area(sorted_scores, only_top_x=1, save_img=True, name=filename)
+    # The ideal shot apparently (-0.06, 0.24) -> (-20.4 mm, 81.6 mm)
+    for coords, value in sorted_scores.items():
+        # Dicts retain parsing order nowadays
+        x_mm = coords[0]*total_diam
+        y_mm = coords[1]*total_diam
+        print(
+            f"The ideal aiming spot gives an average of {value} points. Coordinates: {coords} -> x={x_mm}mm, y={y_mm}mm")
+        break
+    print(f"If the player threw {shots_per_spot} aiming at the optimal position, it would look like this:")
+    ev_area(coords[0], coords[1], sigma_x, sigma_y, size=nb_shots_per_spot_per_line,
+            save_img=save_img, name=name_root+"_ideal")
 
 
-# ## Bad player 0.2, 0.2
-# ev_area(0.0, 0.0, 0.2, 0.2, size=50, save_img=True, name="sx0.2_sy0.2_center")
-# # The ideal shot apparently
-# ev_area(-0.020, 0.0999999, 0.2, 0.2, size=50, save_img=True, name="sx0.2_sy0.2_ideal")
-# # What happens when aiming at the triple 20
-# ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0.2, 0.2, size=50, save_img=True, name="sx0.2_sy0.2_triple_20")
+if __name__ == '__main__':
+    """Generating a full study for a given type of player
+    """
+    # Excellent player 0.02, 0.02
+    # optimal_for_player(0.02, 0.02, nb_spots_per_line=51, nb_shots_per_spot_per_line=100, save_img=True)
 
-# # sorted_scores = explore_ev_area(51, 0.2, 0.2, size=100)
+    # Good player 0.07, 0.07
+    optimal_for_player(0.07, 0.07, nb_spots_per_line=51, nb_shots_per_spot_per_line=100, save_img=True)
 
-# filename = "sorted_spots2601_size10000_sx0.2_sy0.2"
-# sorted_scores = pickle.load(open(filename, "rb"))
-# plot_explore_ev_area(sorted_scores, only_top_x=None, save_img=True, name=filename)
-# plot_explore_ev_area(sorted_scores, only_top_x=100, save_img=True, name=filename)
-# plot_explore_ev_area(sorted_scores, only_top_x=1, save_img=True, name=filename)
+    # Average player 0.15, 0.09
+    # optimal_for_player(0.15, 0.09, nb_spots_per_line=51, nb_shots_per_spot_per_line=100, save_img=True)
 
+    # Bad player 0.2, 0.2
+    # optimal_for_player(0.2, 0.2, nb_spots_per_line=51, nb_shots_per_spot_per_line=100, save_img=True)
 
-## Excellent player 0.02, 0.02
-ev_area(0.0, 0.0, 0.02, 0.02, size=50, save_img=True, name="sx0.02_sy0.02_center")
-# The ideal shot apparently
-ev_area(0.3, 0.0, 0.02, 0.02, size=50, save_img=True, name="sx0.02_sy0.02_ideal")
-# What happens when aiming at the triple 20
-ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0.02, 0.02, size=50, save_img=True, name="sx0.02_sy0.02_triple_20")
+    """Other tests
+    """
 
-# sorted_scores = explore_ev_area(51, 0.02, 0.02, size=100)
+    # print(get_score(0.25, 0.0))
+    # explore_darts(100)
+    # ev_area(0.0, 0.0, 0.2, 0.1, size=51)
 
-filename = "sorted_spots2601_size10000_sx0.02_sy0.02"
-sorted_scores = pickle.load(open(filename, "rb"))
-plot_explore_ev_area(sorted_scores, only_top_x=None, save_img=True, name=filename)
-plot_explore_ev_area(sorted_scores, only_top_x=100, save_img=True, name=filename)
-plot_explore_ev_area(sorted_scores, only_top_x=1, save_img=True, name=filename)
+    # ## Testing perfect accuracy to check coordinates and stuff
+    # # Aiming at triple 20
+    # ev_area((triple_ext_diam/2 - border/2)/total_diam, 0.0, 0, 0, size=2)
+    # # Aiming at triple 14
+    # ev_area(0.0, (triple_ext_diam/2 - border/2)/total_diam, 0, 0, size=2)
+    # # Aiming at ~~triple 11
+    # ev_area(0.1, (triple_ext_diam/2 - border/2)/total_diam, 0, 0, size=2)
+
+    # Equivalent player of r based on 14 games avg_throw=14.08
+    # ev_area(0.0, 0.0, 0.0735, 0.0735, size=100, save_img=False)
+    # ev_area(0.0, 0.0, 0.07, 0.07, size=100, save_img=False)
