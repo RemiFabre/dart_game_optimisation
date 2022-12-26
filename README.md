@@ -3,16 +3,27 @@
 # Description
 A simple Python program to solve the game of darts. More precisely, if the accuracy (2x2 covariance matrix) of a player is known, then the optimal aiming position can be calculated. This is achieved through a brute force method.
 
-Should you aim for triple 20? For the bull's eye? Something else? The answer actually depends on your skill level.
+This work provides 3 main features :
+- Optimal aiming spot to maximize the score per throw
+- Deduce a player's accuracy (2x2 covariance matrix) from a list of his/her scores
+- Optimal aiming spot for each game situation (e.g. where to aim when your score is 269?)
+
+Should you aim for triple 20? For the bull's eye? Something else? The answer actually depends on **your skill level and your current score.**
 
 # Results
 TL&DR: 
 - Unless you're an excellent player, aiming at the triple 20 is a trap.
-- If you're bad, aim for the center and pray
-- If you're in between, the optimal aiming spot changes depending on your skill level. You can use this library to output a tailored aim map.
+- Unless you're a bad player, aiming for the center is also a trap.
+- If you're in between, the optimal aiming spot changes depending on your skill level and the current score. You can use this library to output a tailored aim map.
 
-Optimal aiming spots for (from left to right) a bad player, an average player, a good player and an excellent player
+Optimal aiming spots **in the early game** for (from left to right) a bad player, an average player, a good player and an excellent player
 ![](2022-12-25-23-55-44.png)
+
+Detailed list of aiming spots for a "good player" for each of the 301 possible current scores:
+[optishots](opti_shots_good_player.md)
+
+
+
 
 
 Below several simulations for several types of players.

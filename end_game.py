@@ -78,7 +78,7 @@ def get_empty_proba():
 
 
 def optimal_spot_for_score(current_score, points_per_line, sigma_x, sigma_y, size=100,
-                           proba_coverage=0.99, plot=True, save_img=False):
+                           proba_coverage=0.99, plot=True, save_img=True):
     goal = 301
     # To be saved on disk and updated for each score. This is the final solution that will be updated score by score
     # by descending order
@@ -176,6 +176,9 @@ def optimal_spot_for_score(current_score, points_per_line, sigma_x, sigma_y, siz
 
         if plot:
             plt.show()
+        plt.close()
+        plt.cla()
+        plt.clf()
 
     return scores_ev_and_pos, sorted_spot_scores
 
@@ -192,7 +195,7 @@ def approximate_spot_ev(proba_and_value, depth=9):
     ev = 0.0
     # To avoid recalculating:
     pf = proba_and_value["bust"][0]
-    if pf > 0.9:
+    if pf > 0.6:
         # Reducing the "depth" of the formula is not impactful when pf is small
         # But when pf is close to 1 (i.e we're failing almost all of our shots) then the expected number
         # of throws can be very large, and the impact of reducing the depth too impactful
@@ -249,6 +252,13 @@ if __name__ == '__main__':
     # Testing approximate_spot_ev
     # test_approximate_spot_ev()
 
-    scores_ev_and_pos, sorted_spot_scores = optimal_spot_for_score(300, 51, 0.07, 0.07, size=100, proba_coverage=0.99)
-    # print(sorted_spot_scores)
-    print(scores_ev_and_pos)
+    # Generating the README...
+    for i in range(301):
+        current_score = 300-i
+        text = f"![{current_score}](img/optimal_shot_good_player/optishot_{current_score}_2601_size10000_sx0.07_sy0.07)"
+        print(text)
+
+    # for i in range(301):
+    #     scores_ev_and_pos, sorted_spot_scores = optimal_spot_for_score(
+    #         300-i, 51, 0.07, 0.07, size=100, proba_coverage=0.99, plot=False, save_img=True)
+    #     print(scores_ev_and_pos)
