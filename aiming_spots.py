@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import collections as mc
 import pickle
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import traceback
@@ -189,6 +190,16 @@ def draw_board(ax=None):
     circle6 = plt.Circle((0.0, 0.0), (total_diam/2 - border)/total_diam, color='red',
                          clip_on=False, fill=False, linestyle="--", linewidth=3)
 
+    lines = []  # append [(0, 0), (0.5, 0.5)]
+    for i in range(20):
+        angle = angle_step/2 + i*angle_step
+        small_r = bull_green_diam/(total_diam*2)
+        big_r = total_diam/(total_diam*2)
+        inner_point = (small_r*math.cos(angle), small_r*math.sin(angle))
+        outer_point = (big_r*math.cos(angle), big_r*math.sin(angle))
+        lines.append([inner_point, outer_point])
+    lc = mc.LineCollection(lines, linewidths=2)
+
     if ax is None:
         plt.gca().add_patch(circle1)
         plt.gca().add_patch(circle2)
@@ -196,6 +207,7 @@ def draw_board(ax=None):
         plt.gca().add_patch(circle4)
         plt.gca().add_patch(circle5)
         plt.gca().add_patch(circle6)
+        plt.gca().add_collection(lc)
     else:
         ax.add_patch(circle1)
         ax.add_patch(circle2)
@@ -203,6 +215,7 @@ def draw_board(ax=None):
         ax.add_patch(circle4)
         ax.add_patch(circle5)
         ax.add_patch(circle6)
+        ax.add_collection(lc)
 
 
 def optimal_for_player(sigma_x, sigma_y, nb_spots_per_line=51, nb_shots_per_spot_per_line=100, save_img=True):
@@ -255,16 +268,16 @@ if __name__ == '__main__':
     """Generating a full study for a given type of player
     """
     # Excellent player 0.02, 0.02
-    # optimal_for_player(0.02, 0.02, nb_spots_per_line=51, nb_shots_per_spot_per_line=100, save_img=True)
+    optimal_for_player(0.02, 0.02, nb_spots_per_line=51, nb_shots_per_spot_per_line=100, save_img=True)
 
     # Good player 0.07, 0.07
     optimal_for_player(0.07, 0.07, nb_spots_per_line=51, nb_shots_per_spot_per_line=100, save_img=True)
 
     # Average player 0.15, 0.09
-    # optimal_for_player(0.15, 0.09, nb_spots_per_line=51, nb_shots_per_spot_per_line=100, save_img=True)
+    optimal_for_player(0.15, 0.09, nb_spots_per_line=51, nb_shots_per_spot_per_line=100, save_img=True)
 
     # Bad player 0.2, 0.2
-    # optimal_for_player(0.2, 0.2, nb_spots_per_line=51, nb_shots_per_spot_per_line=100, save_img=True)
+    optimal_for_player(0.2, 0.2, nb_spots_per_line=51, nb_shots_per_spot_per_line=100, save_img=True)
 
     """Other tests
     """
