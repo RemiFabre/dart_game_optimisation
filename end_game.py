@@ -111,19 +111,21 @@ def optimal_spot_for_score(current_score, points_per_line, sigma_x, sigma_y, siz
         # The values P_301, P_300, P_f and EV_301 (==0), EV_300 will be stored in the dictionnary:
         proba_and_value = {}
         proba_and_value["bust"] = [0.0, "N/A"]
-        for i in range(current_score, goal+1):
+        for i in range(current_score+1, goal+1):
             # recovering the EV of a known score
             if i in scores_ev_and_pos:
-                ev = scores_ev_and_pos[i]
+                ev = scores_ev_and_pos[i][0]
             else:
                 print(f"ERROR: score {i} is unknown in scores_ev_and_pos")
                 sys.exit()
             proba_and_value[i] = [0.0, ev]
         # Updating the probability of each of these potential values:
         for value, p in proba.items():
+            # print(f"value={value}, p={p}")
             potential_value = current_score + value
             # Getting the EV of this score
-            if potential_value > goal:
+            if (potential_value > goal) or (potential_value == current_score):
+                # Astuce! Scoring 0 points or busting has the same outcome
                 proba_and_value["bust"][0] += p
             else:
                 if potential_value in proba_and_value:
@@ -132,10 +134,12 @@ def optimal_spot_for_score(current_score, points_per_line, sigma_x, sigma_y, siz
                     print(f"ERROR: score {potential_value} is unknown in proba_and_value")
                     sys.exit()
         spot_ev = approximate_spot_ev(proba_and_value)
+        # print(f"for spot:{coords}\nproba_and_value:{proba_and_value}\nspot_ev:{spot_ev}\n")
+        # input("enter...")
         spot_scores[coords] = spot_ev
 
     sorted_spot_scores = dict(sorted(spot_scores.items(), key=lambda item: item[1], reverse=False))
-    for coords, ev in sorted_spot_scores:
+    for coords, ev in sorted_spot_scores.items():
         print(f"Best ev: {ev} at coords: {coords}")
         scores_ev_and_pos[current_score] = [ev, coords]
         break
@@ -143,7 +147,7 @@ def optimal_spot_for_score(current_score, points_per_line, sigma_x, sigma_y, siz
     return scores_ev_and_pos, sorted_spot_scores
 
 
-def approximate_spot_ev(proba_and_value, depth=5):
+def approximate_spot_ev(proba_and_value, depth=9):
     # We need the probability of each value outcome. e.g if current_score==299, then we need :
     # P_301, P_300, P_f (proba of busting)
     # We also need the expected number of throws for each score other than the current one, so :
@@ -155,6 +159,12 @@ def approximate_spot_ev(proba_and_value, depth=5):
     ev = 0.0
     # To avoid recalculating:
     pf = proba_and_value["bust"][0]
+    if pf > 0.9:
+        # Reducing the "depth" of the formula is not impactful when pf is small
+        # But when pf is close to 1 (i.e we're failing almost all of our shots) then the expected number
+        # of throws can be very large, and the impact of reducing the depth too impactful
+        # So we're just returning a huge value in those cases
+        return 1000
     pfs = []
     for i in range(depth+1):
         # First one is 1, this is intended
@@ -179,6 +189,18 @@ def test_approximate_spot_ev():
     print(f"result={ev}, expected={0.8800000000000001}")
     ev = approximate_spot_ev(proba_and_value, depth=2)
     print(f"result={ev}, expected={1.3120000000000003}")
+    ev = approximate_spot_ev(proba_and_value, depth=3)
+    print(f"result={ev}, expected=TODO")
+    ev = approximate_spot_ev(proba_and_value, depth=4)
+    print(f"result={ev}, expected=TODO")
+    ev = approximate_spot_ev(proba_and_value, depth=5)
+    print(f"result={ev}, expected=TODO")
+    ev = approximate_spot_ev(proba_and_value, depth=6)
+    print(f"result={ev}, expected=TODO")
+    ev = approximate_spot_ev(proba_and_value, depth=7)
+    print(f"result={ev}, expected=TODO")
+    ev = approximate_spot_ev(proba_and_value, depth=8)
+    print(f"result={ev}, expected=TODO")
 
 
 if __name__ == '__main__':
@@ -195,5 +217,5 @@ if __name__ == '__main__':
     # test_approximate_spot_ev()
 
     scores_ev_and_pos, sorted_spot_scores = optimal_spot_for_score(300, 51, 0.07, 0.07, size=100, proba_coverage=0.99)
-    print(sorted_spot_scores)
+    # print(sorted_spot_scores)
     print(scores_ev_and_pos)
