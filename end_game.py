@@ -2,6 +2,8 @@ import numpy as np
 import pickle
 import traceback
 import sys
+import matplotlib.pyplot as plt
+
 
 import aiming_spots
 
@@ -64,8 +66,6 @@ def explore_proba_area(points_per_line, sigma_x, sigma_y, size=100, cutoff_proba
             proba_map[(x, y)] = proba
             print(f"proba={proba} for x,y= {x}, {y} and sigma_x={sigma_x} sigma_y={sigma_y}")
 
-    # Can't sort this
-    # sorted_proba_map = dict(sorted(proba_map.items(), key=lambda item: item[1], reverse=True))
     pickle.dump(proba_map, open(filename, "wb"))
     return proba_map
 
@@ -77,25 +77,36 @@ def get_empty_proba():
             4: 0.0, 30: 0.0, 45: 0.0, 13: 0.0, 26: 0.0, 39: 0.0, 54: 0.0, 1: 0.0}
 
 
-def optimal_spot_for_score(current_score, points_per_line, sigma_x, sigma_y, size=100, proba_coverage=0.99):
+def optimal_spot_for_score(current_score, points_per_line, sigma_x, sigma_y, size=100,
+                           proba_coverage=0.99, plot=True, save_img=False):
     goal = 301
     # To be saved on disk and updated for each score. This is the final solution that will be updated score by score
     # by descending order
-    scores_ev_and_pos = {}
-    scores_ev_and_pos[301] = [0.0, "N/A"]
+    scores_ev_and_pos_filename = f"scores_ev_and_pos_{points_per_line**2}_size{size**2}_sx{sigma_x}_sy{sigma_y}"
+    print(f"Looking for a pickle file at: {scores_ev_and_pos_filename}")
+    try:
+        with open(scores_ev_and_pos_filename, "rb") as f:
+            scores_ev_and_pos = pickle.load(f)
+            print(f"File found! scores_ev_and_pos={scores_ev_and_pos}\n")
+    except Exception as e:
+        # Catching all because we print the traceback and the action is always the same
+        print(traceback.format_exc(e))
+        scores_ev_and_pos = {301: [0.0, 'N/A']}
+        print(f"scores_ev_and_pos was NOT found. Creating an empty one: {scores_ev_and_pos}\n")
+
     filename = f"proba{points_per_line**2}_size{size**2}_sx{sigma_x}_sy{sigma_y}"
     print(f"Looking for a pickle file at: {filename}")
     try:
         with open(filename, "rb") as f:
             proba_map = pickle.load(f)
-            print("File found! No need to redo the calculations")
+            print("File found! No need to redo the calculations\n")
     except Exception as e:
         # Catching all because we print the traceback and the action is always the same
         print(traceback.format_exc(e))
         proba_map = None
 
     if proba_map is None:
-        print(f"No pickle file containing the calculations was found, doing the calculations (can take a while)")
+        print(f"No pickle file containing the calculations was found, doing the calculations (can take a while)\n")
         proba_map = explore_proba_area(points_per_line, sigma_x, sigma_y, size=size)
     # Scoring each aiming spot. The score is the expected number of throws to reach the goal score exactly
     spot_scores = {}
@@ -143,6 +154,28 @@ def optimal_spot_for_score(current_score, points_per_line, sigma_x, sigma_y, siz
         print(f"Best ev: {ev} at coords: {coords}")
         scores_ev_and_pos[current_score] = [ev, coords]
         break
+
+    # Saving a pickle file
+    pickle.dump(scores_ev_and_pos, open(scores_ev_and_pos_filename, "wb"))
+
+    if plot or save_img:
+        # plt.scatter(final_xs, final_ys, final_scores, cmap='hot')
+        # Set the figure size
+        plt.rcParams["figure.figsize"] = [10.0, 10.0]
+        plt.rcParams["figure.autolayout"] = True
+        # Inverting x->y and y->-x because the referentials in matpotlib are different that the one we choose for our board
+        plt.scatter(np.array([coords[1]])*-1.0, np.array([coords[0]]), marker="o")
+        aiming_spots.draw_board()
+        plt.text(-0.2, 0, f"Optimal shot at score {current_score}", fontsize=20)
+        plt.text(-0.2, -0.05, f"Nb throws to close the game: {ev:.1f}", fontsize=20)
+        plt.xlim([-0.5, 0.5])
+        plt.ylim([-0.5, 0.5])
+        if save_img:
+            name = f"optishot_{current_score}_{points_per_line**2}_size{size**2}_sx{sigma_x}_sy{sigma_y}"
+            plt.savefig("img/"+name, format="png",  bbox_inches='tight')
+
+        if plot:
+            plt.show()
 
     return scores_ev_and_pos, sorted_spot_scores
 
