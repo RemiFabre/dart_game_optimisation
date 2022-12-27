@@ -1,7 +1,7 @@
 ![](2022-12-25-23-42-02.png)
 
 # Description
-A simple Python program to solve the game of darts. More precisely, if the accuracy (2x2 covariance matrix) of a player is known, then the optimal aiming position can be calculated. This is achieved through a brute force method.
+A Python program to solve the game of darts. More precisely, if the accuracy (2x2 covariance matrix) of a player is known, then the optimal aiming position can be calculated. This is achieved through a brute force method.
 
 This work provides 3 main features :
 - Optimal aiming spot to maximize the score per throw
@@ -23,10 +23,26 @@ Detailed list of aiming spots for a "good player" for each of the 301 possible c
 [optishots](opti_shots_good_player.md)
 
 
+# State of the art
+**Update 27/12/2022** Never mind, a paper from february 2022 solved the game. Their work is more complete than ours as they take into account the adversarial nature of the game:
+https://arxiv.org/pdf/2011.11031.pdf
+
+
+This work has consistent findings with the paper "A Statistician Plays Darts by Standford's Ryan J. Tibshirani, Andrew Price and Jonathan Taylor"
+https://www.stat.cmu.edu/~ryantibs/papers/darts.pdf
+We find a very similar pattern of aiming spots VS player skill. The models used in both studies are very similar (2D gaussian model for the throws), but the approachs used to solve the problem are different. Reaching the same results is reassuring :)
+**However in their work, they only solved half of the problem**: where to aim to maximize the score per throw.
+
+**Our work also solves the end game as it provides the optimal aiming spot for each possible score**
+
+Other posts/articles with great graphs and coherent results:
+https://www.datagenetics.com/blog/january12012/index.html
+https://www.codeproject.com/Articles/461044/Throwing-Darts-in-Monte-Carlo
 
 
 
-Below several simulations for several types of players.
+
+# Simulations for several types of players.
 
 ## Excellent player with sigma_x=0.02 and sigma_y=0.02
 
@@ -102,13 +118,3 @@ Center shot 11.9 points per shot:
 ![center shot](img/sx0.2_sy0.2_center)
 triple 20 shot 9.8 points per shot:
 ![triple 20 shot](img/sx0.2_sy0.2_triple_20)
-
-# References and articles on this topic
-https://pages.cs.wisc.edu/~bolo/darts/x01.html
-
-https://commons.wikimedia.org/wiki/File:Optimal_Dart_Throw_Location_Skill_Level.svg
-
-https://www.stat.cmu.edu/~ryantibs/darts/
-
-https://www.stat.cmu.edu/~ryantibs/papers/darts.pdf
-
