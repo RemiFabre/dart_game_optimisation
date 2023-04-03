@@ -35,5 +35,5 @@ def scores_to_avg_throw(scores):
     print(f"avg_set={avg_set}, avg_throw={avg_throw}")
 
 if __name__ == '__main__':
-    # scores_to_avg_throw(points_r)
+    # scores_to_avg_throw(points_r).
     scores_to_avg_throw(points_g)

@@ -118,3 +118,5 @@ Center shot 11.9 points per shot:
 ![center shot](img/sx0.2_sy0.2_center)
 triple 20 shot 9.8 points per shot:
 ![triple 20 shot](img/sx0.2_sy0.2_triple_20)
+
+.
