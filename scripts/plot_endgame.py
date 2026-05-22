@@ -23,6 +23,8 @@ from darts.ev import EvResult  # noqa: E402
 
 
 PLAYERS = [
+    ("perfect", 0.0, 0.0, "tab:purple"),
+    ("world_champion", 0.015, 0.015, "tab:cyan"),
     ("excellent", 0.02, 0.02, "tab:blue"),
     ("good", 0.07, 0.07, "tab:green"),
     ("average", 0.15, 0.09, "tab:orange"),

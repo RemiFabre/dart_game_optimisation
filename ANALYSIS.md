@@ -295,6 +295,66 @@ Why the cube enables the end-game DP: given the cube, computing the expected out
 
 ---
 
+## 10.7  Player accuracy: literature anchors and tier choices
+
+> Added after a literature review of how real player accuracy is modeled and measured.
+
+### Is a 2D Gaussian a reasonable model?
+
+Yes — it's the canonical one in published dart-optimization work. The key references:
+
+- **Tibshirani, Price & Taylor (2011)** introduce the model `Z = μ + ε, ε ~ N(0, Σ)` and explicitly compare a Gaussian against a skew-Gaussian extension; the simple Gaussian is empirically adequate. See https://www.stat.cmu.edu/~ryantibs/papers/darts.pdf §3-4.
+- **Haugh & Wang (2022)** use the same bivariate normal for the full multi-turn 501 DP problem. For pros they allow Σ to depend on the *target region* (a pro's σ at T20 is materially smaller than at T17 because they practice T20 much more): https://arxiv.org/abs/2011.11031.
+- A modern walkthrough (Michael Cole, https://mjc239.github.io/maximising-single-dart/) reproduces the comparison and concludes "the added complexity does not provide much additional value over the Gaussian model."
+
+**Two non-obvious points from the literature:**
+
+1. **Anisotropy is real and biomechanical.** Tibshirani measured σ_x = 17.9 mm vs σ_y = 39.1 mm for one skilled amateur — vertical scatter ~2× horizontal. This is mechanistic: "it is common for most players to have a smaller variance in the horizontal direction than in the vertical one, since the throwing motion is up-and-down." Our `average` tier at (σ_x=0.15, σ_y=0.09) — vertical/horizontal ratio 1.67 — sits in the right axis and right ballpark.
+
+2. **Off-diagonal ρ is mostly unidentifiable from score data.** Haugh & Wang's follow-up (https://arxiv.org/abs/2302.10750 §7.1) flags this — without raw landing positions, you can't recover correlation. A diagonal Σ with σ_x ≠ σ_y is therefore the **recommended model**. Our covariance estimator (`darts.covariance`) does have access to raw positions (clicked from the photo) so it *can* fit a correlated Σ, but the solver consumes a diagonal Σ.
+
+### Published σ values vs our tiers
+
+| Source | Player | σ_x (mm) | σ_y (mm) |
+|---|---|---|---|
+| Tibshirani §4 example 1 | beginner statistician (100 darts at bull) | 64.6 | 64.6 |
+| Tibshirani §4 example 2 | skilled amateur | 17.9 | 39.1 |
+| Tibshirani §3 reference | "perfect" pedagogical example | 5 | 5 |
+| Haugh & Wang 2022 | top-16 PDC pros at T20 (inferred from T20 hit rate ~40%) | ~5–8 | ~5–10 |
+
+Translated into our normalized board units (divide mm by 340):
+
+| Our tier | σ_x, σ_y (norm) | mm | Closest published anchor |
+|---|---|---|---|
+| `perfect` | 0, 0 | 0 | Mathematical ideal (no measurement) |
+| `world_champion` | 0.015, 0.015 | 5, 5 | Tibshirani §3 reference; PDC pro at T20 |
+| `excellent` | 0.02, 0.02 | 6.8, 6.8 | Strong pro / club champion |
+| `good` | 0.07, 0.07 | 23.8, 23.8 | Tibshirani's "skilled amateur" (σ=26.9 mm isotropic) |
+| `average` | 0.15, 0.09 | 51, 30 | Beginner-leaning; ratio matches Tibshirani's σ_y/σ_x ≈ 2 |
+| `bad` | 0.20, 0.20 | 68, 68 | Tibshirani's beginner (64.6 mm) |
+
+**Caveats to communicate in the video:**
+
+- Our `excellent` is already pro-territory; it's mislabeled if "excellent" suggests "an excellent amateur". For pedagogy it's fine because it sits at the breakpoint where T20 starts being a credible aim.
+- Our `average` is closer to **novice** than to a median pub player (probably σ ≈ 25–35 mm). A future `casual` tier between `good` and `average` would fill that gap.
+- The σ < 17 mm → aim T20 / σ > 17 mm → aim T19 breakpoint (Tibshirani §5) is a clean teaching anchor — it falls between our `excellent` (6.8 mm) and `good` (23.8 mm) tiers.
+
+### How σ is measured in practice
+
+Two methods in the literature, both rest on the same MLE:
+
+1. **From recorded positions** (what our `covariance.fit_gaussian` does): given clicked (x, y) hits, `Σ = (1/n) Σ Z_i Z_i^T`. Closed form. Requires ~30+ throws aimed at the same target.
+2. **From scores only**: Tibshirani's EM algorithm with closed-form M-step and importance-sampling E-step. Less informative because s(Z) is many-to-one, but it works without raw positions. R package referenced at https://www.stat.cmu.edu/~ryantibs/darts/.
+
+For a pro, sigma is *target-dependent* (smaller at T20 because that's the practice target), so a fair "pro σ" is fit on throws at the player's primary target, not at the bullseye.
+
+### Two new solver tiers
+
+- **`perfect`** (σ = 0): the dart lands exactly where you aim. EV map degenerates to the score field. Optimal aim is anywhere in T20. V(501) = 9 (the canonical perfect game: T20×3, T20×3, T20+T19+D12). Useful as the upper bound.
+- **`world_champion`** (σ = 0.015 ≈ 5 mm): peak van Gerwen / Phil Taylor territory. EV ~58 per dart, V(501) approaches single-digit-turns.
+
+---
+
 ## 11. Order of operations
 
 Each step ends in a verifiable artifact. Short commits along the way.

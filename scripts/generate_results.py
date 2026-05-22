@@ -21,16 +21,27 @@ from darts.io import (
 from darts.proba import probability_cube
 
 
+# Player tier definitions. sigma values are in normalised board units; multiply
+# by board.TOTAL_DIAM = 340 mm to get millimetres. The labels and values are
+# anchored on published measurements (see ANALYSIS.md §12):
+#   - perfect:        sigma = 0   (mathematical ideal, the upper bound)
+#   - world_champion: ~5 mm        (Tibshirani's "perfect" reference; peak PDC pros at T20)
+#   - excellent:      ~6.8 mm      (strong pro / club champion)
+#   - good:           ~23.8 mm     (Tibshirani's skilled amateur)
+#   - average:        51 x 30 mm   (anisotropy matches Tibshirani's empirical ratio)
+#   - bad:            ~68 mm       (Tibshirani's beginner)
 SIGMAS = [
-    ("excellent", 0.02, 0.02),
-    ("good",      0.07, 0.07),
-    ("average",   0.15, 0.09),
-    ("bad",       0.20, 0.20),
+    ("perfect",        0.0,    0.0),
+    ("world_champion", 0.015,  0.015),
+    ("excellent",      0.02,   0.02),
+    ("good",           0.07,   0.07),
+    ("average",        0.15,   0.09),
+    ("bad",            0.20,   0.20),
 ]
 
 EV_RESOLUTION = 1024     # sub-mm aim grid for the heatmap stuff
 DP_RESOLUTION = 128       # used for end-game DP — keeps the matmul cheap
-SOLVE_OFFICIAL_FOR = {"good"}  # 501 solve only for the canonical player (slow)
+SOLVE_OFFICIAL_FOR = {"good", "perfect", "world_champion"}  # interesting comparison set
 
 
 def main() -> None:

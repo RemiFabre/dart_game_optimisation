@@ -19,6 +19,8 @@ from darts.viz import plot_ev_heatmap  # noqa: E402
 
 
 SIGMAS = [
+    ("perfect", 0.0, 0.0),
+    ("world_champion", 0.015, 0.015),
     ("excellent", 0.02, 0.02),
     ("good", 0.07, 0.07),
     ("average", 0.15, 0.09),
