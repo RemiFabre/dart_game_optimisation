@@ -57,16 +57,20 @@ python scripts/click_hits.py path/to/your/photo.jpg
 
 ## Results: best aim by player skill (FFT solver)
 
-| Player level | σ_x | σ_y | best aim (board) | expected score / dart |
-|---|---|---|---|---|
-| excellent | 0.02 | 0.02 | (+0.303, +0.001) — triple-20 | 37.18 |
-| good      | 0.07 | 0.07 | (-0.296, +0.114) — triple-19 / inner-7 area | 16.17 |
-| average   | 0.15 | 0.09 | (-0.042, +0.255) — between bull and triple-11 | 13.52 |
-| bad       | 0.20 | 0.20 | (-0.029, +0.076) — near bull | 12.04 |
+The σ values are in normalised board units (multiply by 340 mm for millimetres). The tiers and their literature anchors are documented in [`ANALYSIS.md`](ANALYSIS.md) §10.7.
 
-The optimum migrates smoothly from triple-20 → triple-19 → bull as σ grows; see [`results/endgame/optimum_trail.png`](results/endgame/optimum_trail.png).
+| Player level | σ_x, σ_y | mm | best aim (board) | EV / dart | V(301) simple | V(501) official |
+|---|---|---|---|---|---|---|
+| `perfect`        | 0, 0          | 0    | T20 (any pixel) | **60.00** | **6.0** | **9.0** |
+| `world_champion` | 0.015, 0.015  | 5    | (+0.303, +0.000) — T20 | 42.62 | 7.7 | **13.1** |
+| `excellent`      | 0.02, 0.02    | 6.8  | (+0.303, +0.001) — T20 | 37.18 | 8.8 | — |
+| `good`           | 0.07, 0.07    | 23.8 | (-0.296, +0.114) — T19 region | 16.17 | 19.8 | **40.5** |
+| `average`        | 0.15, 0.09    | 51, 30 | (-0.042, +0.255) — near T11 | 13.52 | 25.3 | — |
+| `bad`            | 0.20, 0.20    | 68   | (-0.029, +0.076) — near bull | 12.04 | 33.1 | — |
 
-For the canonical good player, full 501 with double-out + 3-dart turns: expected throws to finish = **40.5** (≈ 13.5 turns).
+The lower three tiers are anchored on Tibshirani et al.'s empirical measurements (beginner σ≈65 mm, skilled amateur σ≈27 mm). `world_champion` (5 mm) matches Tibshirani's "perfect" pedagogical reference and the σ implied by peak-PDC pros' ~40% T20 hit rate; `perfect` (σ=0) is the mathematical upper bound — its EV map is literally the dartboard score field, and the 501 game closes in the canonical **9-darter**.
+
+The optimum migrates smoothly from triple-20 → triple-19 → bull as σ grows; see [`results/endgame/optimum_trail.png`](results/endgame/optimum_trail.png) and the V(s) overlay in [`results/endgame/v_curves_official.png`](results/endgame/v_curves_official.png).
 
 ## State of the art
 

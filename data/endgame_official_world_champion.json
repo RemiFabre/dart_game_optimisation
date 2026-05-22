@@ -1,0 +1,17 @@
+{
+  "kind": "endgame_official",
+  "sigma_x": 0.015,
+  "sigma_y": 0.015,
+  "goal": 501,
+  "resolution": 128,
+  "v_units": "expected throws to finish (501-style, 3-dart turns, double-out)",
+  "best_first_aim_format": "pixel (i, j) for dart 1 of a fresh turn at score s",
+  "mid_turn_aim_columns": "[s_turn_start, s_curr, darts_left, aim_i, aim_j]",
+  "board_diameter_mm": 340.0,
+  "extent_normalized": [
+    -0.5,
+    0.5
+  ],
+  "axis_0": "x_board (toward 20, up)",
+  "axis_1": "y_board (toward 11, left)"
+}

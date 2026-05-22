@@ -54,28 +54,36 @@ def plot_v_curves(data_dir: Path, out_dir: Path) -> None:
 
 
 def plot_v_curve_official(data_dir: Path, out_dir: Path) -> None:
-    """V(s) for the official 501 game (currently solved for 'good' only)."""
+    """V(s) for the official 501 game, overlaying all solved tiers."""
     out_dir.mkdir(parents=True, exist_ok=True)
-    npz_path = data_dir / "endgame_official_good.npz"
-    if not npz_path.exists():
-        return
-    data, meta = load_npz(npz_path)
-    v = data["v"]
-    s = np.arange(len(v))
-    finite = np.isfinite(v)
     fig, ax = plt.subplots(figsize=(9, 5))
-    ax.plot(s[finite], v[finite], color="tab:green", linewidth=2,
-            label=f"good player σ=({meta['sigma_x']}, {meta['sigma_y']})")
+    plotted = 0
+    for label, sx, sy, color in PLAYERS:
+        npz_path = data_dir / f"endgame_official_{label}.npz"
+        if not npz_path.exists():
+            continue
+        data, meta = load_npz(npz_path)
+        v = data["v"]
+        s = np.arange(len(v))
+        finite = np.isfinite(v)
+        ax.plot(
+            s[finite], v[finite], color=color, linewidth=2,
+            label=f"{label} σ=({meta['sigma_x']}, {meta['sigma_y']})  V(501)={v[501]:.1f}",
+        )
+        plotted += 1
+    if plotted == 0:
+        plt.close(fig)
+        return
     ax.set_xlabel("Remaining score")
     ax.set_ylabel("Expected throws to finish")
     ax.set_title("Official 501 end game (3-dart turns, double-out)")
     ax.axvline(1, color="black", linestyle=":", alpha=0.5, label="s=1: can't double-out")
-    ax.legend()
+    ax.legend(loc="upper left", fontsize=9)
     ax.grid(alpha=0.3)
     fig.tight_layout()
-    fig.savefig(out_dir / "v_curve_official_good.png", dpi=120)
+    fig.savefig(out_dir / "v_curves_official.png", dpi=120)
     plt.close(fig)
-    print(f"  wrote {out_dir / 'v_curve_official_good.png'}")
+    print(f"  wrote {out_dir / 'v_curves_official.png'}")
 
 
 def plot_outcome_distribution(out_dir: Path) -> None:
