@@ -29,7 +29,7 @@ def test_simple_solver_matches_reference(cube_good) -> None:
     aim point). When accumulated over many throws the V values can drift by
     a fraction of a throw; we accept differences up to 0.5.
     """
-    ref_path = REPO_ROOT / "scores_ev_and_pos_2601_size10000_sx0.07_sy0.07"
+    ref_path = REPO_ROOT / "reference_python" / "scores_ev_and_pos_2601_size10000_sx0.07_sy0.07"
     with open(ref_path, "rb") as f:
         ref = pickle.load(f)
 

@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "reference_python"))
 
 import aiming_spots  # noqa: E402  reference implementation
 
