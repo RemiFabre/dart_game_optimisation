@@ -1,0 +1,16 @@
+{
+  "kind": "probability_cube",
+  "sigma_x": 0.02,
+  "sigma_y": 0.02,
+  "resolution": 128,
+  "axis_0_kind": "outcome_index",
+  "axis_1": "x_board (toward 20, up)",
+  "axis_2": "y_board (toward 11, left)",
+  "outcome_index_layout": "0=MISS; 1..20=S1..S20; 21..40=D1..D20; 41..60=T1..T20; 61=BULL_25; 62=BULL_50",
+  "value_units": "probability",
+  "board_diameter_mm": 340.0,
+  "extent_normalized": [
+    -0.5,
+    0.5
+  ]
+}

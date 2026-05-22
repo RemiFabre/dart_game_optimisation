@@ -1,0 +1,16 @@
+{
+  "kind": "endgame_simple",
+  "sigma_x": 0.15,
+  "sigma_y": 0.09,
+  "goal": 301,
+  "resolution": 128,
+  "v_units": "expected throws to finish (single-dart, no double-out, misses count as busts)",
+  "best_aim_format": "pixel (i, j) into the (N, N) board grid",
+  "board_diameter_mm": 340.0,
+  "extent_normalized": [
+    -0.5,
+    0.5
+  ],
+  "axis_0": "x_board (toward 20, up)",
+  "axis_1": "y_board (toward 11, left)"
+}

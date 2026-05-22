@@ -1,0 +1,14 @@
+{
+  "kind": "ev_map",
+  "sigma_x": 0.15,
+  "sigma_y": 0.09,
+  "resolution": 1024,
+  "value_units": "expected score per dart",
+  "board_diameter_mm": 340.0,
+  "extent_normalized": [
+    -0.5,
+    0.5
+  ],
+  "axis_0": "x_board (toward 20, up)",
+  "axis_1": "y_board (toward 11, left)"
+}
