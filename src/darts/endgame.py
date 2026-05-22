@@ -149,81 +149,73 @@ def solve_official(
     best_first_aim = np.zeros((goal + 1, 2), dtype=np.int64)
     mid_turn_aim: dict[tuple[int, int, int], tuple[int, int]] = {}
 
+    values_row = VALUES[None, :].astype(np.int64)
+    is_double_row = IS_DOUBLE[None, :]
+
     for s in range(2, goal + 1):
         v_self = 3.0  # initial guess
 
-        # Precompute per-s_curr outcome classifications and "static" continue
-        # costs for dart 3 (which references V[ns] of known scores ns < s).
-        # Any continue outcome that lands at new_score == s (only possible
-        # via MISS from s_curr == s) gets v_self at evaluation time, not v[s]
-        # (which is +inf during the iteration).
-        f_mask_by: dict[int, np.ndarray] = {}
-        b_mask_by: dict[int, np.ndarray] = {}
-        c_mask_by: dict[int, np.ndarray] = {}
-        new_scores_by: dict[int, np.ndarray] = {}
-        v_cont_dart3_static: dict[int, np.ndarray] = {}
-        v_self_mask_dart3: dict[int, np.ndarray] = {}
+        # All s_curr from 2 to s in one batch.
+        scurr_arr = np.arange(2, s + 1, dtype=np.int64)[:, None]   # (n_scurr, 1)
+        new_scores = scurr_arr - values_row                         # (n_scurr, K)
+        finish_mat = (new_scores == 0) & is_double_row
+        bust_mat = (
+            (new_scores < 0)
+            | (new_scores == 1)
+            | ((new_scores == 0) & ~is_double_row)
+        )
+        continue_mat = ~finish_mat & ~bust_mat
+        cont_to_s = continue_mat & (new_scores == s)
+        cont_normal = continue_mat & ~cont_to_s
 
-        for s_curr in range(2, s + 1):
-            f_mask, b_mask, c_mask = _classify(s_curr)
-            f_mask_by[s_curr] = f_mask
-            b_mask_by[s_curr] = b_mask
-            c_mask_by[s_curr] = c_mask
-            new_scores = s_curr - VALUES
-            new_scores_by[s_curr] = new_scores
-            v_cont = np.zeros(N_OUTCOMES, dtype=np.float64)
-            cont_to_s = c_mask & (new_scores == s)
-            cont_normal = c_mask & ~cont_to_s
-            for k in np.where(cont_normal)[0]:
-                v_cont[k] = v[int(new_scores[k])]
-            v_cont_dart3_static[s_curr] = v_cont
-            v_self_mask_dart3[s_curr] = b_mask | cont_to_s
+        ns_clipped = np.clip(new_scores, 0, s)                      # safe lookup
+        static_dart3 = np.where(cont_normal, v[ns_clipped], 0.0)
+        mask_dart3 = bust_mat | cont_to_s                           # contributes v_self
 
-        prev_diff = float("inf")
+        # Row for V(s) = W_0(s); same logic as the last s_curr row above,
+        # so we can index directly into the matrices.
+        s_idx = s - 2  # row index of s_curr == s in the batched arrays
+
+        idx_first = 0
+        aim_w2_row = np.zeros(s - 1, dtype=np.int64)
+        aim_w1_row = np.zeros(s - 1, dtype=np.int64)
         for iter_idx in range(fixed_point_max_iter):
-            # W_2[s_curr]: about-to-throw dart 3.
-            w2 = np.zeros(s + 1, dtype=np.float64)
-            for s_curr in range(2, s + 1):
-                cost_vec = v_cont_dart3_static[s_curr] + v_self_mask_dart3[s_curr] * v_self
-                cost_field = 1.0 + flat_cube.T @ cost_vec.astype(flat_cube.dtype)
-                w2[s_curr] = float(cost_field.min())
-                # Always record (overwrite); the last iteration wins.
-                mid_turn_aim[(s, s_curr, 1)] = divmod(int(cost_field.argmin()), n)
+            # W_2: cost_mat[s_curr, k] = v[ns] (continue, ns<s) or v_self (bust or ns==s)
+            cost_mat_w2 = static_dart3 + mask_dart3 * v_self        # (n_scurr, K)
+            cost_fields_w2 = 1.0 + cost_mat_w2 @ flat_cube           # (n_scurr, N*N)
+            w2_vec = cost_fields_w2.min(axis=1)
+            aim_w2_row = cost_fields_w2.argmin(axis=1)
 
-            # W_1[s_curr]: about-to-throw dart 2.
-            w1 = np.zeros(s + 1, dtype=np.float64)
-            for s_curr in range(2, s + 1):
-                b_mask = b_mask_by[s_curr]
-                c_mask = c_mask_by[s_curr]
-                new_scores = new_scores_by[s_curr]
-                cost_vec = np.zeros(N_OUTCOMES, dtype=np.float64)
-                cont_k = np.where(c_mask)[0]
-                cost_vec[cont_k] = w2[new_scores[cont_k]]
-                cost_vec[b_mask] = v_self
-                cost_field = 1.0 + flat_cube.T @ cost_vec.astype(flat_cube.dtype)
-                w1[s_curr] = float(cost_field.min())
-                mid_turn_aim[(s, s_curr, 2)] = divmod(int(cost_field.argmin()), n)
+            # W_1: continue advances to W_2(new_score)
+            w2_full = np.zeros(s + 1, dtype=np.float64)
+            w2_full[2:] = w2_vec
+            cost_mat_w1 = np.where(continue_mat, w2_full[ns_clipped], 0.0)
+            cost_mat_w1 = np.where(bust_mat, v_self, cost_mat_w1)
+            cost_fields_w1 = 1.0 + cost_mat_w1 @ flat_cube
+            w1_vec = cost_fields_w1.min(axis=1)
+            aim_w1_row = cost_fields_w1.argmin(axis=1)
 
-            # V[s] = W_0[s]: about-to-throw dart 1 at turn-start score s.
-            b_mask = b_mask_by[s]
-            c_mask = c_mask_by[s]
-            new_scores = new_scores_by[s]
-            cost_vec = np.zeros(N_OUTCOMES, dtype=np.float64)
-            cont_k = np.where(c_mask)[0]
-            cost_vec[cont_k] = w1[new_scores[cont_k]]
-            cost_vec[b_mask] = v_self
-            cost_field = 1.0 + flat_cube.T @ cost_vec.astype(flat_cube.dtype)
-            v_new = float(cost_field.min())
-            idx_first = int(cost_field.argmin())
+            # V(s) = W_0(s): continue advances to W_1(new_score), only the s_curr == s row.
+            w1_full = np.zeros(s + 1, dtype=np.float64)
+            w1_full[2:] = w1_vec
+            cost_vec_s = np.where(
+                continue_mat[s_idx], w1_full[ns_clipped[s_idx]], 0.0
+            )
+            cost_vec_s = np.where(bust_mat[s_idx], v_self, cost_vec_s)
+            cost_field_s = 1.0 + flat_cube.T @ cost_vec_s.astype(flat_cube.dtype)
+            v_new = float(cost_field_s.min())
+            idx_first = int(cost_field_s.argmin())
 
             diff = abs(v_new - v_self)
             v_self = v_new
             if diff < fixed_point_tol:
                 break
-            prev_diff = diff
 
         v[s] = v_self
         best_first_aim[s] = (idx_first // n, idx_first % n)
+        for sci, s_curr in enumerate(range(2, s + 1)):
+            mid_turn_aim[(s, s_curr, 1)] = divmod(int(aim_w2_row[sci]), n)
+            mid_turn_aim[(s, s_curr, 2)] = divmod(int(aim_w1_row[sci]), n)
 
     return OfficialSolution(
         goal=goal,
