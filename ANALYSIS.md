@@ -232,55 +232,47 @@ Bullet list of things worth mentioning, in roughly the order they'd appear in th
 
 ---
 
-## 10. Questions for you
+## 10. Decisions (locked in)
 
-Answer inline below each one.
+1. **Language** — Stay in **full Python**. FFT-based core via `scipy.signal.fftconvolve`. If it turns out not fast enough later, the clean Python interface gives us an easy path to rewrite the hot core in C/C++/Rust.
+2. **Game rules** — Use the **real rules: 501, double-out, 3-dart turn structure**. The simple "single-throw expected value" study doesn't need these and stays as-is for pedagogy. The end-game / multi-turn results use the real rules.
+3. **Covariance** — Diagonal Σ for v1, using the existing σ values (0.02, 0.07, 0.15/0.09, 0.2) so results are directly comparable to the reference. Full Σ comes later, but only with *realistic* values — see the new roadmap item below.
+4. **History cleanup** — Don't purge. Move files within the working tree if useful, but keep git history intact.
+5. **Repo layout** — Roughly §6, lightly simplified. Reference code stays in `reference_python/` as the verification oracle.
+6. **Data format** — `.npy` + `.json` sidecar. Can change later.
+7. **Scope of cleanup** —
+   - **Do not modify the reference code.** Bugs and all, it stays as-is until the new code's numerics match it. Otherwise we can't tell whose bug a discrepancy belongs to.
+   - Add `pyproject.toml`, make the new solver pip-installable.
+   - Short docstrings only.
+   - Rewrite the README — but not until the new code works and a few representative visualizations are in hand.
+   - **Priority: verify numerics first, then ship heatmaps + optimal-spot visuals on the existing σ values, then move on.**
+8. **End-game trust** — Trust the existing reference results as a regression target. State-of-the-art papers (Tibshirani, Haugh & Wang, DataGenetics) are the secondary cross-check.
 
-1. **Re-implementation language** — A/B/C/D from §5. My vote: **A (Rust + Python viz)**, but D (stay in Python with FFT) is the move if the video is the only deliverable.
-   - Your answer:
+### New roadmap item — covariance estimator from clicked points
 
-2. **Should the new solver model proper 3-dart turn structure and the double-out rule?** Both are doable, both improve realism, both increase complexity. The video can still cover just the simplified version. (My instinct: model the proper turn structure; double-out optional. The current one-throw-at-a-time model is a known simplification we should note.)
-   - Your answer:
+Once the basic solver + visualizations are in hand, build a small Python tool that:
 
-3. **Full covariance (correlated σ_x and σ_y)** — worth supporting from day one, or keep diagonal? FFT handles it natively, costs nothing. I'd say yes, support it.
-   - Your answer:
+- Loads a photo / scan of a dartboard with hits on it.
+- Lets the user **calibrate scale** by clicking known landmarks (centre + a known ring).
+- Lets the user **click each hit** to record (x, y) in board coordinates.
+- Fits a 2D Gaussian (mean, covariance) to the clicks via MLE.
 
-4. **History cleanup** — happy to keep all the old PNGs and pickles in git history but move them out of the working tree? Or do you want to fully purge them via `git filter-repo`? I do **not** recommend purging history unless you have a strong reason.
-   - Your answer:
-
-5. **Repo layout** — does §6's proposed layout look right? Particularly: keeping `reference_python/` as the verification oracle.
-   - Your answer:
-
-6. **Data format** — `.npy + .json sidecar` OK? Or do you have a preferred convention from other projects?
-   - Your answer:
-
-7. **Scope of the cleanup pass** — should I also:
-   - [ ] Fix the bugs in §3 in the reference Python code?
-   - [ ] Add a `requirements.txt` / `pyproject.toml` to make it pip-installable?
-   - [ ] Write proper docstrings + a single `__main__` CLI?
-   - [ ] Rewrite the README to be cleaner and split the long results into a sub-page?
-   - Your answer:
-
-8. **End-game video angle** — do you want me to dig into whether the *current* end-game results are bug-free (re-derive a few cases by hand) before we rewrite? Or just trust them, rewrite, and verify against the new solver?
-   - Your answer:
-
-9. **Anything missing?** Anything in the work I haven't addressed that you want covered before we proceed?
-   - Your answer:
+v1 is a desktop Python script (matplotlib clicker is fine). Eventually wraps into a small website where anyone can upload their cardboard. CV-based hit detection is explicitly **not** required for v1 — manual clicks are the contract.
 
 ---
 
-## 11. What I'd do once you've answered
+## 11. Order of operations
 
-Order of operations (1 commit per chunk, short messages):
+Each step ends in a verifiable artifact. Short commits along the way.
 
-1. Pin reference Python in `reference_python/`, fix its bugs, add a smoke test.
-2. Move PNGs / pickles into `legacy/` or out of the tree, update README references.
-3. Stand up the new solver scaffold in the chosen language.
-4. Port `get_score` and verify identical output to Python over a dense grid.
-5. Implement FFT-based EV computation; cross-check against the Python Monte Carlo within Monte-Carlo error.
-6. Implement the per-value probability cubes; cross-check the same way.
-7. Implement the end-game DP; cross-check against the existing pickled end-game result.
-8. Write the `.npy` / `.json` output layer.
-9. Hand off to your viz layer; iterate on what plots you actually want.
+1. Set up the new Python package skeleton (`src/` layout, `pyproject.toml`).
+2. Port `get_score` to a new vectorized module; test for exact agreement against `reference_python/aiming_spots.get_score` over a dense grid.
+3. Implement FFT-based EV computation.
+4. **Verification gate:** for several (aim, σ) points, confirm FFT EV agrees with reference Monte Carlo within MC standard error.
+5. Generate heatmaps + optimal-spot plots for the existing σ values; visually and numerically compare against the reference pickles. **Pause here for your review.**
+6. Implement per-value probability cubes via FFT.
+7. Implement the 501 end-game with double-out + proper 3-dart turn structure. Run a 301 / one-throw-at-a-time mode internally to validate against the reference 301 pickle, then enable real rules.
+8. Standardize `.npy` + `.json` output layer for the viz layer.
+9. Move reference code into `reference_python/`. Rewrite the README. Open the door to the covariance-estimator tool.
 
-Each step is independently verifiable against the existing Python, which is why I want to keep the Python as an oracle.
+The reference code is the oracle until step 5 passes.
