@@ -1,122 +1,79 @@
-![](2022-12-25-23-42-02.png)
+![](results/heatmaps/ev_heatmap_good_sx0.07_sy0.07.png)
 
-# Description
-A Python program to solve the game of darts. More precisely, if the accuracy (2x2 covariance matrix) of a player is known, then the optimal aiming position can be calculated. This is achieved through a brute force method.
+# Dart game optimisation
 
-This work provides 3 main features :
-- Optimal aiming spot to maximize the score per throw
-- Deduce a player's accuracy (2x2 covariance matrix) from a list of his/her scores
-- Optimal aiming spot for each game situation (e.g. where to aim when your score is 269?)
+Solver for the optimal dart aim point given a player's accuracy. Find where to aim to maximise the expected score per dart, and (with the official rules) the optimal aim for every state of the 501 end game.
 
-Should you aim for triple 20? For the bull's eye? Something else? The answer actually depends on **your skill level and your current score.**
+Both questions reduce to **convolving the dartboard score field with a 2D Gaussian** modelling the player's aim error. The new implementation does this exactly via FFT, replacing the original Monte Carlo brute force.
 
-# Results
-TL&DR: 
-- Unless you're an excellent player, aiming at the triple 20 is a trap.
-- Unless you're a bad player, aiming for the center is also a trap.
-- If you're in between, the optimal aiming spot changes depending on your skill level and the current score. You can use this library to output a tailored aim map.
+The math, the design choices, and the rewrite plan are in [`ANALYSIS.md`](ANALYSIS.md).
 
-Optimal aiming spots **in the early game** for (from left to right) a bad player, an average player, a good player and an excellent player
-![](2022-12-25-23-55-44.png)
+## What's in here
 
-Detailed list of aiming spots for a "good player" for each of the 301 possible current scores:
-[optishots](opti_shots_good_player.md)
+```
+src/darts/         the new solver (Python package, pip-installable)
+├─ board.py        dartboard geometry + score function (vectorised)
+├─ ev.py           FFT-based expected-value map
+├─ outcomes.py     enumeration of the 63 single-dart outcomes
+├─ proba.py        per-outcome probability cube (also via FFT)
+├─ endgame.py      end-game DP (simple 301 mode + official 501 rules)
+├─ covariance.py   2D Gaussian fit for estimating a player's σ
+├─ viz.py          heatmap renderer
+└─ io.py           .npy + .json output format
+scripts/           runnable entry points
+data/              solver outputs (per σ): .npy + .json sidecars
+results/           plots: heatmaps, V(s) curves, optimum trail
+tests/             34 tests including FFT-vs-Monte-Carlo verification
+reference_python/  the original 2022 code, frozen as the verification oracle
+ANALYSIS.md        review of the original code + rewrite plan
+```
 
+## Install
 
-# State of the art
-**Update 27/12/2022** Never mind, a paper from february 2022 solved the game. Their work is more complete than ours as they take into account the adversarial nature of the game:
-https://arxiv.org/pdf/2011.11031.pdf
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+pytest                                     # 34 tests, ~6 seconds
+```
 
+## Reproduce all results
 
-This work has consistent findings with the paper "A Statistician Plays Darts by Standford's Ryan J. Tibshirani, Andrew Price and Jonathan Taylor"
-https://www.stat.cmu.edu/~ryantibs/papers/darts.pdf
-We find a very similar pattern of aiming spots VS player skill. The models used in both studies are very similar (2D gaussian model for the throws), but the approachs used to solve the problem are different. Reaching the same results is reassuring :)
-**However in their work, they only solved half of the problem**: where to aim to maximize the score per throw.
+```bash
+python scripts/generate_results.py         # data/ — about 2 minutes
+python scripts/generate_heatmaps.py        # results/heatmaps/
+python scripts/plot_endgame.py             # results/endgame/
+```
 
-**Our work also solves the end game as it provides the optimal aiming spot for each possible score**
+## Estimate your own σ
 
-Other posts/articles with great graphs and coherent results:
-https://www.datagenetics.com/blog/january12012/index.html
-https://www.codeproject.com/Articles/461044/Throwing-Darts-in-Monte-Carlo
+Manual interactive tool that loads a dartboard photo, lets you calibrate scale (click centre + outer-bull ring) and click each hit, then fits a 2D Gaussian:
 
+```bash
+python scripts/click_hits.py path/to/your/photo.jpg
+```
 
+(Eventually this lives on a website — for now the desktop tool is the v1.)
 
+## Results: best aim by player skill (FFT solver)
 
-# Simulations for several types of players.
+| Player level | σ_x | σ_y | best aim (board) | expected score / dart |
+|---|---|---|---|---|
+| excellent | 0.02 | 0.02 | (+0.303, +0.001) — triple-20 | 37.18 |
+| good      | 0.07 | 0.07 | (-0.296, +0.114) — triple-19 / inner-7 area | 16.17 |
+| average   | 0.15 | 0.09 | (-0.042, +0.255) — between bull and triple-11 | 13.52 |
+| bad       | 0.20 | 0.20 | (-0.029, +0.076) — near bull | 12.04 |
 
-## Excellent player with sigma_x=0.02 and sigma_y=0.02
+The optimum migrates smoothly from triple-20 → triple-19 → bull as σ grows; see [`results/endgame/optimum_trail.png`](results/endgame/optimum_trail.png).
 
-With sigma_x=0.02 and sigma_y=0.02, a player that aims at the middle would get something like this after throwing 2601 darts:
-![shots](img/sx0.02_sy0.02_center)
+For the canonical good player, full 501 with double-out + 3-dart turns: expected throws to finish = **40.5** (≈ 13.5 turns).
 
-Knowing this, where should the player aim at to maximize the score per throw?
-![2601 aiming positions scored](img/sorted_spots2601_size10000_sx0.02_sy0.02)
-![best 100 shots](img/sorted_spots2601_size10000_sx0.02_sy0.02_top100)
-The best aiming spot is at (0.3, 0.0):
-![best shot](img/sorted_spots2601_size10000_sx0.02_sy0.02_top1)
+## State of the art
 
-How much better is the optimal aiming spot compared to other common aiming spots?
-Ideal shot 37.5 points per shot:
-![best shot](img/sx0.02_sy0.02_ideal)
-Center shot 32.8 points per shot:
-![center shot](img/sx0.02_sy0.02_center)
+Cross-checks against the reference code (Monte-Carlo solver from 2022), and consistent with:
 
-## Good player with sigma_x=0.07 and sigma_y=0.07
+- Tibshirani, Price & Taylor, [*A Statistician Plays Darts*](https://www.stat.cmu.edu/~ryantibs/papers/darts.pdf) — same single-dart EV findings.
+- Haugh & Wang, [*Play Like the Pros? Solving the Game of Darts as a DP*](https://arxiv.org/pdf/2011.11031) — extends to the adversarial multi-turn game.
+- [DataGenetics, *Throwing Darts*](https://www.datagenetics.com/blog/january12012/index.html) and the [CodeProject Monte-Carlo article](https://www.codeproject.com/Articles/461044/Throwing-Darts-in-Monte-Carlo) for visual comparisons.
 
-With sigma_x=0.07 and sigma_y=0.07, a player that aims at the middle would get something like this after throwing 2601 darts:
-![shots](img/sx0.07_sy0.07_center)
-
-Knowing this, where should the player aim at to maximize the score per throw?
-![2601 aiming positions scored](img/sorted_spots2601_size10000_sx0.07_sy0.07)
-![best 100 shots](img/sorted_spots2601_size10000_sx0.07_sy0.07_top100)
-The best aiming spot is at (-0.3, 0.12):
-![best shot](img/sorted_spots2601_size10000_sx0.07_sy0.07_top1)
-
-How much better is the optimal aiming spot compared to other common aiming spots?
-Ideal shot 16.4 points per shot:
-![best shot](img/sx0.07_sy0.07_ideal)
-Center shot 14.7 points per shot:
-![center shot](img/sx0.07_sy0.07_center)
-triple 20 shot 14.8 points per shot:
-![triple 20 shot](img/sx0.07_sy0.07_triple_20)
-
-## Average player with sigma_x=0.15 and sigma_y=0.09
-
-With sigma_x=0.15 and sigma_y=0.09, a player that aims at the middle would get something like this after throwing 2601 darts:
-![shots](img/sx0.15_sy0.09_center)
-
-Knowing this, where should the player aim at to maximize the score per throw?
-Below, 2601 aiming positions were tried, for each position 10 000 darts were "thrown" in simulation. The expected value for each of the 2061 aiming positions is then calculated and showcased below:
-![2601 aiming positions scored](img/sorted_spots2601_size10000_sx0.15_sy0.09)
-![best 100 shots](img/sorted_spots2601_size10000_sx0.15_sy0.09_top100)
-The best aiming spot is at (-0.06, 0.24):
-![best shot](img/sorted_spots2601_size10000_sx0.15_sy0.09_top1)
-
-How much better is the optimal aiming spot compared to other common aiming spots?
-Ideal shot 13.5 points per shot:
-![best shot](img/sx0.15_sy0.09_ideal)
-Center shot 12.5 points per shot:
-![center shot](img/sx0.15_sy0.09_center)
-triple 20 shot 11.9 points per shot:
-![triple 20 shot](img/sx0.15_sy0.09_triple_20)
-
-## Bad player with sigma_x=0.2 and sigma_y=0.2
-
-With sigma_x=0.2 and sigma_y=0.2, a player that aims at the middle would get something like this after throwing 2601 darts:
-![shots](img/sx0.2_sy0.2_center)
-
-Knowing this, where should the player aim at to maximize the score per throw?
-![2601 aiming positions scored](img/sorted_spots2601_size10000_sx0.2_sy0.2)
-![best 100 shots](img/sorted_spots2601_size10000_sx0.2_sy0.2_top100)
-The best aiming spot is at (-0.020, 0.0999999):
-![best shot](img/sorted_spots2601_size10000_sx0.2_sy0.2_top1)
-
-How much better is the optimal aiming spot compared to other common aiming spots?
-Ideal shot 12.0 points per shot:
-![best shot](img/sx0.2_sy0.2_ideal)
-Center shot 11.9 points per shot:
-![center shot](img/sx0.2_sy0.2_center)
-triple 20 shot 9.8 points per shot:
-![triple 20 shot](img/sx0.2_sy0.2_triple_20)
-
-.
+The original work used Monte Carlo over a 51×51 aim grid; the new solver computes the same quantities exactly on a 1024×1024 grid via Gaussian convolution. Verification: the new `darts.board.get_score` matches the reference's pixel-by-pixel on a 200×200 grid (`tests/test_board.py`); the FFT EV agrees with 1M-sample Monte Carlo for six (aim, σ) configurations (`tests/test_fft_vs_mc.py`); the end-game DP agrees with the reference's pickled 301-game V values within Monte Carlo noise (`tests/test_endgame.py`).
