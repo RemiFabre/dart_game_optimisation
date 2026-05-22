@@ -75,3 +75,58 @@ def rasterize_score(resolution: int) -> np.ndarray:
     coords = np.linspace(-0.5, 0.5, resolution)
     xs, ys = np.meshgrid(coords, coords, indexing="ij")
     return get_score(xs, ys)
+
+
+def get_outcome_index(x, y):
+    """Return the outcome index (into ``darts.outcomes.OUTCOMES``) at each point.
+
+    Same vectorization rules as :func:`get_score`. The mapping is::
+
+        0                 = MISS (off board)
+        1..20             = S1..S20  (single 1..20)
+        21..40            = D1..D20  (double 1..20)
+        41..60            = T1..T20  (triple 1..20)
+        61                = BULL_25  (outer bull)
+        62                = BULL_50  (bullseye, double-bull)
+    """
+    x_arr = np.asarray(x, dtype=np.float64)
+    y_arr = np.asarray(y, dtype=np.float64)
+
+    x_mm = x_arr * TOTAL_DIAM
+    y_mm = y_arr * TOTAL_DIAM
+    distance = np.hypot(x_mm, y_mm)
+
+    out = np.zeros_like(distance, dtype=np.int64)  # default 0 = MISS
+
+    bull = distance <= BULL_EYE_DIAM / 2
+    green = (distance <= BULL_GREEN_DIAM / 2) & ~bull
+    interior = (distance > BULL_GREEN_DIAM / 2) & (distance <= TOTAL_DIAM / 2)
+
+    out = np.where(bull, 62, out)  # BULL_50
+    out = np.where(green, 61, out)  # BULL_25
+
+    if interior.any():
+        theta = np.arctan2(y_mm[interior], x_mm[interior])
+        angle_index = (
+            ((theta + ANGLE_STEP / 2) % (2 * np.pi)) / (2 * np.pi) * 20
+        ).astype(np.int64)
+        number = NUMBERS[angle_index]  # value 1..20 at this wedge
+
+        dist_i = distance[interior]
+        is_double = dist_i >= TOTAL_DIAM / 2 - BORDER
+        is_triple = (dist_i < TRIPLE_EXT_DIAM / 2) & (
+            dist_i >= TRIPLE_EXT_DIAM / 2 - BORDER
+        )
+
+        # Single: index = number (1..20). Double: 20 + number. Triple: 40 + number.
+        idx = np.where(is_double, 20 + number, np.where(is_triple, 40 + number, number))
+        out[interior] = idx
+
+    return out
+
+
+def rasterize_outcome_index(resolution: int) -> np.ndarray:
+    """Rasterize the outcome-index field on a square grid of side ``resolution``."""
+    coords = np.linspace(-0.5, 0.5, resolution)
+    xs, ys = np.meshgrid(coords, coords, indexing="ij")
+    return get_outcome_index(xs, ys)
