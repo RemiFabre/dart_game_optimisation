@@ -261,6 +261,40 @@ v1 is a desktop Python script (matplotlib clicker is fine). Eventually wraps int
 
 ---
 
+## 10.5  What is a "probability cube"? (added during implementation)
+
+For the single-throw EV problem, **one** map per σ is enough: `EV[i, j]` = expected score when aiming at pixel `(i, j)`. That's a single 2D image.
+
+For the **end game**, knowing only the *average* score isn't enough — the optimal strategy depends on the entire **distribution** of possible single-dart outcomes. From score 41, aiming at triple-19 might give a higher average score than aiming at the bullseye, but a *worse* probability of hitting *exactly the right value to set up a double-out*. We need to know, for every aim point, the probability of each possible outcome.
+
+So we build, for a given player σ, a 3D array:
+
+    P[k, i, j]  =  probability of outcome k  when aiming at pixel (i, j)
+
+where `k` indexes the discrete set of single-dart outcomes the dartboard can produce:
+
+- 1 miss (score 0, off-board)
+- 20 singles (S1…S20, scores 1…20)
+- 20 doubles (D1…D20, scores 2…40, **flagged as doubles** for the double-out rule)
+- 20 triples (T1…T20, scores 3…60)
+- outer bull (25, single)
+- bullseye (50, counts as a double for finishing)
+
+That's ~63 outcomes total. Stacking the 63 probability maps gives an array shaped like `(63, N, N)` — a **cube** (3D block) of probabilities. Hence the name.
+
+Computing each layer is, again, a Gaussian convolution: for outcome `k`, define a binary mask `M_k[i, j] = 1` iff pixel `(i, j)` lies in the region that produces outcome `k`. Convolve `M_k` with the Gaussian kernel `G_σ` and you get `P[k, ·, ·]`. So the cube is ~63 FFT convolutions — still fast.
+
+Sanity properties the cube must satisfy:
+
+- `Σ_k P[k, i, j] = 1` for every `(i, j)` (the masks tile the plane).
+- `Σ_k value[k] · P[k, i, j] = EV[i, j]` (the cube is consistent with the direct EV map).
+
+Both become unit tests.
+
+Why the cube enables the end-game DP: given the cube, computing the expected outcome of *any* score-dependent quantity for a given aim point is a single dot product over the `k` axis. The end-game DP repeatedly asks "for this current score, what's the best aim point?" — and answering that becomes 63 multiply-adds per aim point per state, vectorized across all `N²` aim points in one tensor contraction.
+
+---
+
 ## 11. Order of operations
 
 Each step ends in a verifiable artifact. Short commits along the way.
