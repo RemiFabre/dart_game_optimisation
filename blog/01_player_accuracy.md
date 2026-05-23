@@ -15,7 +15,8 @@ The single sharpest answer in the literature is to model the landing point as a 
 
 The rest of this section unpacks (a) what those two words — "two-dimensional Gaussian" and "covariance matrix" — actually mean and look like, (b) what numerical values are realistic for each skill level, (c) when the model fails.
 
-> [📊 **FIG-3.1**: Two-panel teaser. Left: a single dart aimed at the bullseye landing exactly there (the "deterministic" mental model most people start with). Right: same aim, 200 simulated throws drawn from a 2D Gaussian with σ = 25 mm, showing the actual cloud-of-hits picture. Caption: "Real darts don't land where you aim. They land in a cloud around it."]
+![Figure 3.1 — Real darts don't land where you aim](figures/fig_3_1_teaser.png)
+*Figure 3.1 — The mental model (left) versus reality (right). Same aim, 200 simulated throws drawn from a 2D Gaussian with σ = 25 mm.*
 
 ## 2. Vocabulary you can refer back to
 
@@ -35,7 +36,8 @@ The model is then literally one line:
 
 In words: the landing point Z equals the aim point μ plus an error ε, where the error follows a Gaussian distribution centred at the origin with covariance Σ.
 
-> [📊 **FIG-3.2**: A clean diagram showing the formula geometrically — the aim point μ as a star, the landing point Z as a dart, the difference vector ε drawn as an arrow, all over the board. Caption: "The model in one picture."]
+![Figure 3.2 — Z = μ + ε](figures/fig_3_2_model_diagram.png)
+*Figure 3.2 — The model in one picture. The aim point μ (gold star), the actual landing Z (red dot), and the random error ε that connects them. The dashed ellipses are the 1σ and 2σ contours of the error distribution.*
 
 ## 3. What the covariance matrix Σ looks like and what each entry means
 
@@ -57,7 +59,8 @@ Geometrically, the iso-probability contours of a 2D Gaussian are **ellipses**, a
 - A vertically-stretched ellipse → σ_y > σ_x, ρ = 0.
 - A tilted ellipse → ρ ≠ 0.
 
-> [📊 **FIG-3.3**: A three-panel figure showing three Gaussian contour shapes side by side, with their Σ matrices written underneath each one. Panel A: circular (σ_x = σ_y = 20, ρ = 0). Panel B: vertical ellipse (σ_x = 15, σ_y = 30, ρ = 0). Panel C: tilted ellipse (σ_x = 15, σ_y = 30, ρ = 0.5). Each panel shows 1σ and 2σ contour ellipses plus ~500 sampled points. This is the single most important figure of the section.]
+![Figure 3.3 — The three shapes a covariance matrix can produce](figures/fig_3_3_three_shapes.png)
+*Figure 3.3 — The three shapes a covariance matrix can produce. Isotropic (left): a single number σ describes a circular cloud. Diagonal anisotropic (centre): two independent numbers σ_x and σ_y describe an axis-aligned ellipse. Full Σ with ρ ≠ 0 (right): three numbers describe a tilted ellipse. The single most important figure of the section.*
 
 > **Sidebar: "symmetric", "diagonal", "isotropic" — which is which?**
 >
@@ -82,11 +85,14 @@ This is the kind of thing that silently causes everyone's heatmaps to be 90° wr
 
 The biomechanical claim that "vertical scatter is larger than horizontal" reads as σ_y > σ_x in both the papers and in our code. Every numerical σ value we quote from the literature in this post is **stated directly in this convention**, with no rotation footnote needed.
 
-> [📊 **FIG-3.4**: An annotated dartboard with the (x, y) axes drawn on it as arrows: +x to the right (toward 6) and +y upward (toward 20). Caption: "Our axis convention — matches Tibshirani 2011 and Haugh & Wang."]
+![Figure 3.4 — Axis convention](figures/fig_3_4_axes.png)
+*Figure 3.4 — Our axis convention, matching Tibshirani 2011 and Haugh & Wang. +x is horizontal (right, toward the 6); +y is vertical (up, toward the 20); origin at the bullseye.*
 
 ## 5. What the data says: empirical fits from the literature
 
-There is one foundational dataset we can lean on for amateurs and one for pros.
+There are two qualitatively different kinds of data on player accuracy in the published record. **Score-only inferences** — where the only observed quantity per throw is the region the dart landed in, and Σ is recovered by EM — give us most of the numbers, including all of the canonical pro fits. **Position measurements** — where the actual (x, y) landing point is recorded — exist in a small number of biomechanics studies but produce much less detailed Σ statistics, and *do not exist at all for the PDC pros* (more on this in §5.3).
+
+We start with the score-only data because that's where the headline numbers live, then turn to what little position-measured evidence is available.
 
 ### 5.1 Amateurs: Tibshirani's two authors
 
@@ -123,7 +129,31 @@ Three things stand out:
 2. **σ at T20 is in the 6–10 mm range** for top-of-the-table pros, consistent with the rule-of-thumb "5 mm" Tibshirani uses to illustrate a near-perfect thrower.
 3. **The correlation ρ is non-zero and consistent in sign** (~+0.3 to +0.5 for these four). We'd love to attach a physical meaning to this but we can't — see §6 again.
 
-> [📊 **FIG-3.5**: Two-panel comparison figure. Left: the two Tibshirani amateurs' fitted ellipses overlaid on a dartboard (axes labelled, ellipses at 1σ and 2σ contours). Right: van Gerwen's six per-region fitted ellipses overlaid on a dartboard, one at each of T20/T19/T18/T17/bull/doubles. Caption: "Two amateurs (left) vs one world champion at six different targets (right). The amateurs' ellipses are large and visibly elongated; the pro's are tight and have different shapes at different targets — see §7."]
+![Figure 3.5 — Tibshirani amateurs vs van Gerwen per-region](figures/fig_3_5_amateurs_vs_pro.png)
+*Figure 3.5 — Two amateurs (left) vs one world champion at six different targets (right). The amateurs' ellipses are large and visibly elongated vertically; the pro's are tight and have different orientations at different target regions — see §6 for why we treat that orientation variation skeptically.*
+
+### 5.3 Position-measured data: a fundamental gap in the public record
+
+The single most striking thing we found while writing this section is **what doesn't exist**. As far as we can determine, there is no publicly available dataset of measured (x, y) dart landing positions paired with a fitted individual covariance matrix — anywhere. Not for any PDC professional, not for any named amateur, not in any academic paper, not in any commercial CV product, not in any hobbyist project on GitHub.
+
+This matters because, as we'll see in §6, the off-diagonal element of Σ literally cannot be recovered from score data alone. The papers that fit pro Σ from PDC broadcast scores explicitly say so. **The numbers in §5.2 are not measurements of how van Gerwen's darts actually scatter; they are the best-fitting bivariate-normal model under the constraint that you only observe the score, not the landing point.** The distinction will become important.
+
+What *does* exist, with quantitative caveats:
+
+| Source | Method | What is measured | Anchor σ |
+|---|---|---|---|
+| [Lotze et al. 2019][^lotze2019] (PLOS ONE) | 5 mm position grid; 20 experts + 21 novices; ~60 throws each | bivariate variable error (BVE), group means | expert ≈ 3.8 cm BVE ⇒ σ_radial ≈ **19 mm**; novice ≈ 7.4 cm BVE ⇒ σ_radial ≈ **37 mm** |
+| [Churron et al. 2014][^churron2014] (PMC) | 200 Hz 6-camera motion capture; 8 experts + 8 novices, 60 throws each | mean vertical error (horizontal dropped as "negligible") | best expert vertical error ≈ **13.5 mm** |
+| [Morice et al. 2013][^morice2013] (PLOS ONE) | Optotrak 0.1 mm tracking; 8 experts + 9 beginners, 180 throws each | autocorrelation analysis; CE contours | qualitative: expert variance ≪ beginner variance, p = 3 × 10⁻⁶ |
+| [DeepDarts (McNally et al. 2021)][^deepdarts] (CVPR-W) | computer vision on dartboard images | per-dart (x, y) labels in ~16 k images | not a player-scatter dataset — it's a CV training benchmark, no per-player Σ |
+
+A few commercial computer-vision systems do exist (Scolia, Autodarts, Gungnir) and *do* measure landing positions to roughly millimetre accuracy, but their data is held privately inside user accounts; none of them publish per-player σ.
+
+Three things worth flagging from the table:
+
+1. **Lotze et al.'s "expert"** group (BVE 3.8 cm ≈ σ_radial 19 mm) is the tightest position-measured σ in the published record. We use it as our best non-pro anchor in the tier scheme below.
+2. **Churron et al.'s methodological choice** is itself evidence for anisotropy: they explicitly dropped horizontal-error analysis because for trained players it's so much smaller than vertical error that 1-D vertical-only analysis loses nothing. This is independent confirmation of Tibshirani's biomechanical argument (§5.1).
+3. **For the actual numerical Σ matrices of PDC top-tier pros, the literature gives us nothing position-measured**. Every quoted pro number anywhere — including the Haugh & Wang Σ matrices in §5.2 — comes from score-only EM. This is the model's biggest known limitation, and §6 walks through what it implies.
 
 ## 6. The anisotropy puzzle: does the ratio depend on skill?
 
@@ -143,7 +173,7 @@ Worse, their analysis suggests **the fitted ellipse orientation tends to align w
 
 The implication is sobering: **the pro per-region anisotropy reported in OptimalDarts and analysed in Haugh & Wang 2022 should not be interpreted as "this pro is more accurate horizontally than vertically when throwing at T20."** It is a statistical fit to score data, with known identifiability issues; you cannot read the eigenvectors of the fitted Σ as biomechanical statements.
 
-For amateurs the same caveat technically applies, but the asymmetry is so large and so consistent across the two known datapoints — and the biomechanical explanation is so plausible — that we are comfortable treating "σ_y > σ_x" (vertical scatter > horizontal) as a real signal for amateur-level players.
+For amateurs the same caveat technically applies, but the asymmetry is so large and so consistent across the two known datapoints — and **independently confirmed by Churron et al.'s position-measured data** (§5.3, where horizontal error is so small it can be dropped from analysis) — and the biomechanical explanation is so plausible — that we are comfortable treating "σ_y > σ_x" (vertical scatter > horizontal) as a real signal for amateur-level players.
 
 ### Our modelling choice (and we flag this as a choice, not a deduction)
 
@@ -154,7 +184,8 @@ We apply an anisotropy ratio at the **amateur** tiers (beginner, average, good) 
 
 A reader interested in the per-region Haugh & Wang model can use the matrices in `papers/OptimalDarts_repo/ALL_Model_Fits.mat` directly — our infrastructure supports diagonal Σ, and a small wrapper would let it consume the full 96-matrix table for the 16 PDC pros. We discuss this in §9 as a future extension.
 
-> [📊 **FIG-3.6**: A scatterplot with skill level on the x-axis (σ in mm, log scale) and σ_y / σ_x ratio on the y-axis. Points: the two Tibshirani amateurs (ratio ~1.6 and ~2.2), each of the 16 pros' pooled-across-region ratio, and the proposed-tier values from §8. A horizontal line at ratio = 1 marks isotropic. The plot should make visible that amateurs cluster well above 1 and pros cluster near 1.]
+![Figure 3.6 — Anisotropy ratio vs skill](figures/fig_3_6_anisotropy_ratio.png)
+*Figure 3.6 — How the anisotropy ratio (σ_y / σ_x) varies with skill. Amateurs (orange) cluster well above 1 — vertical scatter dominates. Pros (blue) cluster at ~1.0, but as §6 argues, that flatness is an artefact of fitting score-only data, not a measurement of physical isotropy. Lotze's position-measured groups (green) report no anisotropy ratio; we plot them at the isotropic line to flag what was not measured.*
 
 ## 7. Target dependence: how σ varies across the board
 
@@ -202,7 +233,8 @@ We chose (deliberate choice, not deduction): treat σ as global. The data presen
 
 A motivated individual player who wants to refine the model has a clear path: throw 50–100 darts at each of their main targets (T20, T19, T18, T17, bullseye, D-out targets), fit a separate Σ per region (the `darts.covariance` module already supports this — you just need to bucket your throws by aim), and feed the result into a small per-region wrapper around our solver. We sketch this extension in §11.
 
-> [📊 **FIG-3.7**: A bar chart of the four pro T20/T19/T18/T17 hit rates with the per-player range overlaid as error bars. Plus a second bar chart showing the average |μ − region-centre| at the four trebles. Two bar charts, one figure. Caption: "Pros are not equally good at every triple. T20 is their practice target."]
+![Figure 3.7 — Target dependence](figures/fig_3_7_target_dependence.png)
+*Figure 3.7 — Pros are not equally good at every triple. Left: T20/T19/T18/T17 hit rates for the 16-pro pool and for van Gerwen specifically. Right: the average distance between the fitted aim point μ and the region centre — i.e. how far the player's actual aim drifts from the intended target. Both panels show a clean monotonic degradation away from T20, the practice target.*
 
 ## 8. The six-tier proposal (anchored, not arbitrary)
 
@@ -211,22 +243,26 @@ Putting all of the above together, here is our proposed six-tier scheme. We give
 | Tier              | σ_x (mm) | σ_y (mm) | σ_x norm | σ_y norm | Ratio σ_y/σ_x | Anchored on                                                                  |
 |-------------------|----------|----------|----------|----------|----------------|-------------------------------------------------------------------------------|
 | **perfect**       | 0        | 0        | 0        | 0        | n/a            | mathematical limit; Tibshirani 2011 Figure 2 (σ=5 mm) is the closest empirical reference |
-| **world_champion**| 7        | 7        | 0.021    | 0.021    | 1.0 (isotropic; data limitation) | Best PDC pros at T20 (e.g. van Gerwen geometric-mean σ ≈ 7.3 mm at T20)        |
+| **world_champion**| 6        | 6        | 0.018    | 0.018    | 1.0 (isotropic; data limitation) | Best PDC pros at T20 (e.g. van Gerwen, Price at ≈ 6 mm at T20)               |
 | **professional**  | 9        | 9        | 0.026    | 0.026    | 1.0 (isotropic; data limitation) | Pooled mean of the 16 PDC top-16 across all six target regions (≈ 8.4 mm)     |
-| **good**          | 18       | 39       | 0.053    | 0.115    | 2.17           | Tibshirani Author 2 (decent amateur) full-Σ fit                              |
-| **average**       | 30       | 51       | 0.088    | 0.150    | 1.70           | Interpolation between Author 1 and Author 2; ratio chosen as the midpoint    |
-| **beginner**      | 43       | 69       | 0.126    | 0.203    | 1.60           | Tibshirani Author 1 (weak amateur) full-Σ fit                                 |
+| **good**          | 13       | 26       | 0.038    | 0.076    | 2.0            | **Lotze et al. 2019** expert group (BVE 3.8 cm ⇒ σ_radial ≈ 19 mm), position-measured, with the Tibshirani-derived 2:1 anisotropy applied |
+| **average**       | 25       | 50       | 0.074    | 0.147    | 2.0            | **Lotze et al. 2019** novice group (BVE 7.4 cm ⇒ σ_radial ≈ 37 mm), position-measured |
+| **beginner**      | 43       | 69       | 0.126    | 0.203    | 1.60           | Tibshirani Author 1 (weak amateur) full-Σ fit, score-only                    |
 
 Notes on the choices:
 
-- **Anisotropy applied at amateur tiers, not at pro tiers.** This is the choice the previous subsections built toward. Empirically justified for amateurs (Tibshirani §3); knowingly conservative for pros (where the per-region anisotropy exists but cannot be cleanly disentangled from region geometry).
-- **The `professional` tier is anchored on the 16-pro pool**, not on any single player. The "world_champion" tier is the upper edge of that distribution and is calibrated to the best players' σ at T20 specifically (because that's their actual aim 90% of the time).
-- **`average` is interpolated**, not directly measured — the gap between Tibshirani's two authors is the only amateur data we have, so we put one tier on each and one in between. We flag this as a modelling choice rather than data.
+- **`good` and `average` are now anchored on the only position-measured study we found** (Lotze et al. 2019). The Lotze paper reports a single bivariate-variable-error number per group, not a per-player Σ, so we interpret it as the radial σ and split it into σ_x and σ_y using the 2:1 vertical-to-horizontal ratio that Tibshirani's authors and Churron et al.'s motion-capture data both support. **Old values from Tibshirani 2011 (score-only fits at the same skill level) are about 1.5× larger** — likely because Lotze's lab-recruited experts were dart-trained whereas Tibshirani's authors were statisticians who happened to play, but also possibly because score-only inference systematically inflates σ when there's mass near boundaries. Either way the position-measured number is the better anchor for "what a decent recreational player's σ actually is".
+- **`beginner` stays at Tibshirani Author 1** (full-Σ score-only fit). Lotze's novice group is at σ ≈ 37 mm, considerably below Tibshirani's 65 mm, so the two scales don't disagree about "worst published amateur" — they're sampling different populations.
+- **Anisotropy applied at amateur tiers, not at pro tiers.** Empirically justified for amateurs (Tibshirani §5.1; Churron §5.3 confirms with position data); knowingly conservative for pros (the per-region anisotropy exists in the score-only fits but cannot be cleanly disentangled from region geometry — see §6).
+- **The `professional` tier is anchored on the 16-pro score-only pool**, not on any single player. The `world_champion` tier is the upper edge of that distribution and is calibrated to the best players' σ at T20 specifically (because that's their actual aim 90% of the time). **Both are subject to the score-only-inference caveat**: nobody has actually measured a pro's landing positions, so these are our best guesses, not measurements.
+- **The good-to-professional jump (σ ≈ 19 mm → 9 mm, factor 2)** is genuinely large. We considered adding a "competitor" tier in between but found no data to anchor it on — *anything* we put there would be a guess. Better to leave the gap visible: it reflects the actual difference between a competitive amateur and a PDC tour pro.
 - **`perfect`** has σ = 0 exactly. The previous version of the codebase used σ = 0.0001 as a safety; the FFT kernel handles σ = 0 (it collapses to a delta function), so we can use the exact zero.
 
-> [📊 **FIG-3.8**: Headliner figure for §3. A single dartboard rendered six times, one per tier. Each panel shows the player's aim (a cross at the bullseye) and their 1σ and 2σ error ellipses, with the same colour-coding throughout. Tier labels and σ values printed beside each ellipse. The visual ladder of "how good is good".]
+![Figure 3.8 — The six tiers as error ellipses](figures/fig_3_8_six_tiers.png)
+*Figure 3.8 — The six tiers visualised as 1σ (solid) and 2σ (dashed) error ellipses, all aiming at the bullseye. The visual ladder of "how good is good": perfect ⊂ world_champion ⊂ professional ⊂ good ⊂ average ⊂ beginner.*
 
-> [📊 **FIG-3.9**: A small "skill ladder" infographic. Three columns: σ (mm), tier name and one-line description, expected 3-dart-average score at the solver's recommended aim. The third column anchors the abstract σ values to "what would your match average look like".]
+![Figure 3.9 — Skill ladder infographic](figures/fig_3_9_skill_ladder.png)
+*Figure 3.9 — The skill ladder, anchored on what σ means in match terms. The expected-EV-per-dart column comes from our solver's optimal-aim heatmaps and lets a reader translate the abstract σ values into "what would my match average look like".*
 
 ## 9. Limitations, restated as honest claims
 
@@ -249,7 +285,8 @@ If a reader wants to fit their own personal Σ — and we think they should — 
 
 The trade-off: score-only EM works at distance (e.g. you can score someone else's PDC match), but produces a Σ whose off-diagonal is, as discussed above, not identifiable. Position-fit needs you to actually photograph and click your own board, but produces a Σ whose every entry is meaningful.
 
-> [📊 **FIG-3.10**: A small "how many throws do you need" figure. Synthetic 2D Gaussian samples with known true σ, fit with N = 10, 30, 50, 100, 200; plot the 95% CI on the recovered σ_x and σ_y as a function of N. Identify the visible knee. This tells the reader how many throws to commit to.]
+![Figure 3.10 — How many throws to estimate σ](figures/fig_3_10_n_throws.png)
+*Figure 3.10 — How many throws you need to fit σ accurately. Synthetic data with true σ_x = 18 mm and σ_y = 36 mm (the "good" tier); each point is the mean of 400 independent fits at that N. By N = 100 the 95% CI is roughly ±10% of the truth; by N = 250 it's ±5%. The knee is around N = 50.*
 
 ## 11. What we'd change if we had more data
 
@@ -265,3 +302,7 @@ A short list, in priority order, for anyone who wants to extend the model:
 [^tibshirani2011]: Tibshirani, R. J., Price, A. & Taylor, J. (2011). *A Statistician Plays Darts.* Journal of the Royal Statistical Society Series A, 174(1), 213–226. Local copy: `papers/tibshirani_2011_darts.pdf`. URL: https://www.stat.cmu.edu/~ryantibs/papers/darts.pdf
 [^hw2022]: Haugh, M. B. & Wang, C. (2022). *Play Like the Pros? Solving the Game of Darts as a Dynamic Zero-Sum Game.* INFORMS Journal on Computing, 34(5), 2540–2551 (arXiv:2011.11031). Local: `papers/haugh_wang_2022_dp_darts.pdf`. URL: https://arxiv.org/abs/2011.11031
 [^hw2024]: Haugh, M. B. & Wang, C. (2024). *An Empirical Bayes Approach for Estimating Skill Models for Professional Darts Players.* arXiv:2302.10750v3. Local: `papers/haugh_wang_2024_eb_darts.pdf`. URL: https://arxiv.org/abs/2302.10750
+[^lotze2019]: Lotze, M. et al. (2019). *Is Imagery Better Than Reality? Performance in Real and Imagined Dart Throws.* PMC6520223. 20 experts + 21 novices, position recorded on a 5 mm grid; reports bivariate variable error (BVE) at group level. Expert BVE 3.8 cm, novice 7.4 cm. URL: https://pmc.ncbi.nlm.nih.gov/articles/PMC6520223/
+[^churron2014]: Churron, A. et al. (2014). *Two Types of Motor Strategy for Accurate Dart Throwing.* PMC3922883. 6-camera 200 Hz motion capture; 8 experts + 8 novices, 60 throws each. Reports mean vertical error ≈ 13.5 mm for best expert; argues horizontal error is "negligible" for trained players and drops it from analysis. URL: https://pmc.ncbi.nlm.nih.gov/articles/PMC3922883/
+[^morice2013]: Morice, A. H. P. et al. (2013). *What Autocorrelation Tells Us About Motor Variability: A Dart Throwing Study.* PLOS ONE / PMC3656833. Optotrak Certus motion capture at 0.1 mm accuracy; 8 experts + 9 beginners, 180 throws each. Reports group-level confidence ellipses; expert variance is significantly smaller than beginner (p = 3 × 10⁻⁶). URL: https://pmc.ncbi.nlm.nih.gov/articles/PMC3656833/
+[^deepdarts]: McNally, W. et al. (2021). *DeepDarts: Modeling Keypoints as Objects for Automatic Scorekeeping in Darts using a Single Camera.* CVPR Workshop on Computer Vision in Sports. ~16 k labelled dartboard images with per-dart (x, y) annotations. URL: https://arxiv.org/abs/2105.09880; dataset at https://ieee-dataport.org/open-access/deepdarts-dataset
