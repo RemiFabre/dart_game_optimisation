@@ -309,29 +309,31 @@ Yes — it's the canonical one in published dart-optimization work. The key refe
 
 **Two non-obvious points from the literature:**
 
-1. **Anisotropy is real and biomechanical.** Tibshirani measured σ_x = 17.9 mm vs σ_y = 39.1 mm for one skilled amateur — vertical scatter ~2× horizontal. This is mechanistic: "it is common for most players to have a smaller variance in the horizontal direction than in the vertical one, since the throwing motion is up-and-down." Our `average` tier at (σ_x=0.15, σ_y=0.09) — vertical/horizontal ratio 1.67 — sits in the right axis and right ballpark.
+1. **Anisotropy is real and biomechanical.** Tibshirani measured σ_x = 17.9 mm vs σ_y = 39.1 mm for one skilled amateur (x = horizontal, y = vertical; standard literature convention) — vertical scatter ~2× horizontal. This is mechanistic: "it is common for most players to have a smaller variance in the horizontal direction than in the vertical one, since the throwing motion is up-and-down." Our `average` tier at (σ_x=0.09, σ_y=0.15) — vertical/horizontal ratio 1.67 — sits in the right axis and right ballpark.
 
 2. **Off-diagonal ρ is mostly unidentifiable from score data.** Haugh & Wang's follow-up (https://arxiv.org/abs/2302.10750 §7.1) flags this — without raw landing positions, you can't recover correlation. A diagonal Σ with σ_x ≠ σ_y is therefore the **recommended model**. Our covariance estimator (`darts.covariance`) does have access to raw positions (clicked from the photo) so it *can* fit a correlated Σ, but the solver consumes a diagonal Σ.
 
 ### Published σ values vs our tiers
 
+We use the standard convention from the literature: **x = horizontal** (+x toward 6), **y = vertical** (+y toward 20). All σ values below are in this convention.
+
 | Source | Player | σ_x (mm) | σ_y (mm) |
 |---|---|---|---|
-| Tibshirani §4 example 1 | beginner statistician (100 darts at bull) | 64.6 | 64.6 |
+| Tibshirani §4 example 1 | beginner statistician (100 darts at bull) | 42.7 | 68.6 |
 | Tibshirani §4 example 2 | skilled amateur | 17.9 | 39.1 |
 | Tibshirani §3 reference | "perfect" pedagogical example | 5 | 5 |
-| Haugh & Wang 2022 | top-16 PDC pros at T20 (inferred from T20 hit rate ~40%) | ~5–8 | ~5–10 |
+| Haugh & Wang 2022 | top-16 PDC pros at T20 (inferred from T20 hit rate ~40%) | ~6–10 | ~5–8 |
 
-Translated into our normalized board units (divide mm by 340):
+In our normalized board units (divide mm by 340):
 
-| Our tier | σ_x, σ_y (norm) | mm | Closest published anchor |
+| Our tier | σ_x, σ_y (norm) | σ_x, σ_y (mm) | Closest published anchor |
 |---|---|---|---|
-| `perfect` | 0, 0 | 0 | Mathematical ideal (no measurement) |
+| `perfect` | 0, 0 | 0, 0 | Mathematical ideal (no measurement) |
 | `world_champion` | 0.015, 0.015 | 5, 5 | Tibshirani §3 reference; PDC pro at T20 |
 | `excellent` | 0.02, 0.02 | 6.8, 6.8 | Strong pro / club champion |
 | `good` | 0.07, 0.07 | 23.8, 23.8 | Tibshirani's "skilled amateur" (σ=26.9 mm isotropic) |
-| `average` | 0.15, 0.09 | 51, 30 | Beginner-leaning; ratio matches Tibshirani's σ_y/σ_x ≈ 2 |
-| `bad` | 0.20, 0.20 | 68, 68 | Tibshirani's beginner (64.6 mm) |
+| `average` | 0.09, 0.15 | 30, 51 | Anisotropic amateur; ratio matches Tibshirani's σ_y/σ_x ≈ 1.7 |
+| `bad` | 0.20, 0.20 | 68, 68 | Tibshirani's beginner (64.6 mm isotropic) |
 
 **Caveats to communicate in the video:**
 

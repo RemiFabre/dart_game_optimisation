@@ -71,25 +71,18 @@ Geometrically, the iso-probability contours of a 2D Gaussian are **ellipses**, a
 
 ## 4. The axis convention, once and for all
 
-This is the kind of thing that silently causes everyone's heatmaps to be 90° wrong, so we state it up front. There are two conventions in the literature and we use a third (an unintentional one, inherited from this project's first commit). The differences are not deep — they're all rotations — but we have to be precise.
+This is the kind of thing that silently causes everyone's heatmaps to be 90° wrong, so we state it up front. We adopt the same convention as every paper cited in this post (Tibshirani 2011 §3 p. 7; Haugh & Wang 2022 §3 p. 5; Haugh & Wang 2024 §7) and as standard math/computer-vision practice:
 
 > **Our convention** (this project; defined in `src/darts/board.py`):
 >
-> - **x** is the **vertical** axis on the board face. **+x points toward the 20** (i.e. upward when you look at the board normally).
-> - **y** is the **horizontal** axis. **+y points to the left** (toward the 11).
+> - **x** is the **horizontal** axis. **+x points to the right** (toward the 6 wedge, at the 3 o'clock position).
+> - **y** is the **vertical** axis. **+y points upward** (toward the 20 wedge, at the top of the board).
 > - The origin is the centre of the bullseye.
+> - Both axes are normalised to [-0.5, 0.5], so the full board fits exactly in the unit square.
 
-> **The literature's convention** (Tibshirani 2011 §3 p. 7; Haugh & Wang 2022 §3 p. 5; Haugh & Wang 2024 §7):
->
-> - **x** is the **horizontal** axis (+x to the right).
-> - **y** is the **vertical** axis (+y upward, toward the 20).
+The biomechanical claim that "vertical scatter is larger than horizontal" reads as σ_y > σ_x in both the papers and in our code. Every numerical σ value we quote from the literature in this post is **stated directly in this convention**, with no rotation footnote needed.
 
-These are related by a 90° rotation, which means **paper σ_x corresponds to our σ_y, and paper σ_y corresponds to our σ_x**. The biomechanical claim that "vertical scatter is larger than horizontal" reads as σ_y > σ_x in the papers and σ_x > σ_y in our code. Every numerical value we quote from the literature in this post is **translated into our convention** so the reader doesn't have to do the bookkeeping. The papers' own numbers — useful if you go read them directly — appear in footnotes [^tib-coord] [^hw-coord].
-
-> [📊 **FIG-3.4**: An annotated dartboard with the (x, y) axes drawn on it as arrows. A second small inset shows the literature convention rotated 90° next to ours, with the relation σ_x_ours = σ_y_paper made explicit. Caption: "Our convention vs the published one — translate as you read."]
-
-[^tib-coord]: Tibshirani 2011 measures throws at the bullseye with x = horizontal, y = vertical (§3 p. 7). The full-Σ fit for "author 1" (the weaker player) reports Σ ≈ [[1820.6, −471.1], [−471.1, 4702.2]] mm², from which σ_x_paper ≈ 42.7 mm and σ_y_paper ≈ 68.6 mm.
-[^hw-coord]: Haugh & Wang 2022 §3 p. 5 and Haugh & Wang 2024 §7 p. 16 both use x = horizontal, y = vertical with origin at the bullseye centre. Their Cartesian dartboard figures (Figure 1, p. 7 in HW 2022; Figure 2 p. 16 in HW 2024) label the axes accordingly.
+> [📊 **FIG-3.4**: An annotated dartboard with the (x, y) axes drawn on it as arrows: +x to the right (toward 6) and +y upward (toward 20). Caption: "Our axis convention — matches Tibshirani 2011 and Haugh & Wang."]
 
 ## 5. What the data says: empirical fits from the literature
 
@@ -97,36 +90,36 @@ There is one foundational dataset we can lean on for amateurs and one for pros.
 
 ### 5.1 Amateurs: Tibshirani's two authors
 
-Tibshirani et al. asked two of the paper's authors to each throw 100 darts aimed at the bullseye and recorded only the *scores* (which region each dart landed in, not the precise position). Using an EM algorithm (§3.1 p. 7 of [Tibshirani 2011, in `papers/tibshirani_2011_darts.pdf`][^tibshirani2011]) they fit both a simple isotropic σ and the general 2×2 Σ. Here are the four resulting fits, translated into our axis convention:
+Tibshirani et al. asked two of the paper's authors to each throw 100 darts aimed at the bullseye and recorded only the *scores* (which region each dart landed in, not the precise position). Using an EM algorithm (§3.1 p. 7 of [Tibshirani 2011, in `papers/tibshirani_2011_darts.pdf`][^tibshirani2011]) they fit both a simple isotropic σ and the general 2×2 Σ. Here are the resulting fits, in the paper's (= our) convention:
 
-| Player          | Simple isotropic σ | Full Σ fit (our convention)            | Ratio σ_x / σ_y |
-|-----------------|--------------------|----------------------------------------|------------------|
-| "Author 1" (weak amateur, Tibshirani himself) | 64.6 mm | σ_x = 68.6, σ_y = 42.7, ρ = −0.16 | **1.61** |
-| "Author 2" (decent amateur, Andy Price)        | 26.9 mm | σ_x = 39.1, σ_y = 17.9, ρ = −0.22 | **2.19** |
+| Player          | Simple isotropic σ | Full Σ fit                              | Ratio σ_y / σ_x |
+|-----------------|--------------------|------------------------------------------|------------------|
+| "Author 1" (weak amateur, Tibshirani himself) | 64.6 mm | σ_x = 42.7, σ_y = 68.6, ρ = −0.16 | **1.61** |
+| "Author 2" (decent amateur, Andy Price)        | 26.9 mm | σ_x = 17.9, σ_y = 39.1, ρ = −0.22 | **2.19** |
 
 Two important takeaways from this single table:
 
-1. **Even the "weak" beginner has anisotropic error.** Both amateurs land with significantly more vertical scatter than horizontal — a ratio of roughly 1.6 to 2.2. The σ = 64.6 vs σ = 26.9 numbers that the simple isotropic fit returns are just *summaries* of the true asymmetric distributions; they hide the asymmetry but it's there. We have to be careful about citing "the beginner has σ = 65 mm" without noting that the actual error ellipse is taller-than-wide.
+1. **Even the "weak" beginner has anisotropic error.** Both amateurs land with significantly more vertical (σ_y) scatter than horizontal (σ_x) — a ratio of roughly 1.6 to 2.2. The σ = 64.6 vs σ = 26.9 numbers that the simple isotropic fit returns are just *summaries* of the true asymmetric distributions; they hide the asymmetry but it's there. We have to be careful about citing "the beginner has σ = 65 mm" without noting that the actual error ellipse is taller-than-wide.
 2. **Tibshirani §3 attributes the asymmetry to biomechanics**: "[i]t is common for most players to have a smaller variance in the horizontal direction than in the vertical one, since the throwing motion is up-and-down with no … lateral component" (p. 7). This isn't a per-player accident, it's a structural feature of how people throw.
 
 These are the only two amateur-σ data points in the published literature. They anchor our "beginner" and "good amateur" tiers respectively.
 
 ### 5.2 Professionals: the 16 PDC top-16 from Haugh & Wang
 
-The professional skill model comes from the data accompanying [Haugh & Wang 2022][^hw2022]. They have the 2019 PDC season's full per-player, per-target hit counts for the top 16 players, and they fit a *separate* Σ for each of six target regions (T20, T19, T18, T17, the inner bullseye, and a lump of all twenty doubles). The numerical fits are in `papers/OptimalDarts_repo/ALL_Model_Fits.mat`. Aggregated over the 16 pros and pooled across all six target regions, the typical σ in our convention is **σ_x ≈ 8.2 mm, σ_y ≈ 8.6 mm — almost isotropic**.
+The professional skill model comes from the data accompanying [Haugh & Wang 2022][^hw2022]. They have the 2019 PDC season's full per-player, per-target hit counts for the top 16 players, and they fit a *separate* Σ for each of six target regions (T20, T19, T18, T17, the inner bullseye, and a lump of all twenty doubles). The numerical fits are in `papers/OptimalDarts_repo/ALL_Model_Fits.mat`. Aggregated over the 16 pros and pooled across all six target regions, the typical σ is **σ_x ≈ 8.6 mm, σ_y ≈ 8.2 mm — almost isotropic**.
 
-A few individual players, just to make it concrete (T20 region; numbers in our convention):
+A few individual players, just to make it concrete (T20 region):
 
 | Player                | σ_x (mm) | σ_y (mm) | ρ      |
 |-----------------------|----------|----------|--------|
-| Michael van Gerwen    | 6.06     | 8.78     | +0.36  |
-| Gerwyn Price          | 6.16     | 9.67     | +0.29  |
-| Peter Wright          | 6.60     | 9.70     | +0.30  |
-| Mensur Suljovic       | 7.07     | 8.95     | +0.46  |
+| Michael van Gerwen    | 8.78     | 6.06     | +0.36  |
+| Gerwyn Price          | 9.67     | 6.16     | +0.29  |
+| Peter Wright          | 9.70     | 6.60     | +0.30  |
+| Mensur Suljovic       | 8.95     | 7.07     | +0.46  |
 
 Three things stand out:
 
-1. **All four have σ_x < σ_y** — which in our convention means *vertical* scatter is smaller than horizontal *at T20*. This is the **opposite** of the amateur biomechanical pattern. We address this puzzle in §6.
+1. **All four have σ_x > σ_y at T20** — *horizontal* scatter is larger than vertical at this specific target. This is the **opposite** of the amateur biomechanical pattern (where σ_y > σ_x). We address this puzzle in §6.
 2. **σ at T20 is in the 6–10 mm range** for top-of-the-table pros, consistent with the rule-of-thumb "5 mm" Tibshirani uses to illustrate a near-perfect thrower.
 3. **The correlation ρ is non-zero and consistent in sign** (~+0.3 to +0.5 for these four). We'd love to attach a physical meaning to this but we can't — see §6 again.
 
@@ -134,14 +127,14 @@ Three things stand out:
 
 ## 6. The anisotropy puzzle: does the ratio depend on skill?
 
-Sharp version of the question we landed on while drafting this: **Tibshirani's amateurs are asymmetric (σ_x / σ_y ≈ 1.6 to 2.2 in our convention), but the pros' pooled-across-regions average is essentially isotropic (≈ 0.96). Is anisotropy a beginner thing that disappears with skill, or is something else going on?**
+Sharp version of the question we landed on while drafting this: **Tibshirani's amateurs have σ_y / σ_x ≈ 1.6 to 2.2 (vertical scatter much larger than horizontal), but the pros' pooled-across-regions average is essentially isotropic (≈ 0.96). Is anisotropy a beginner thing that disappears with skill, or is something else going on?**
 
 The honest answer is "we can't fully tell from the published data, but here's what we can say."
 
 ### What we know
 - The amateur asymmetry is large, has the same sign for both Tibshirani authors, and is attributed to the throwing motion. It's almost certainly real (Tibshirani 2011 §3 p. 7).
 - The pro pooled ratio of ~1.0 is computed from the six per-region Σ matrices, *averaged* across regions. This is the right number to compare to the amateurs' bullseye-only fit only if you assume Σ is global — which the pros' data say it isn't (§7).
-- Within a single region, individual pros are *not* isotropic. At T20, four of the four pros above have σ_x noticeably smaller than σ_y in our convention; at T18 the relationship flips for many of them. The per-region ellipse orientation seems to track the target region's geometry — wide bed → flatter ellipse, tall bed → taller ellipse.
+- Within a single region, individual pros are *not* isotropic. At T20, four of the four pros above have σ_x noticeably larger than σ_y; at T18 the relationship flips for many of them. The per-region ellipse orientation seems to track the target region's geometry — wide bed → flatter ellipse, tall bed → taller ellipse.
 
 ### What the literature has to say about this
 [Haugh & Wang 2024 §7.1, in `papers/haugh_wang_2024_eb_darts.pdf`][^hw2024], dedicates a section to exactly this problem. Their conclusion (p. 18, paraphrased): when you only have *scores* (no actual (x, y) landing positions), the off-diagonal entry of the fitted Σ is **not identifiable**. They show a synthetic example (Figure 5, p. 19) of three landing-point datasets with very different true correlations ρ ∈ {−0.5, 0, +0.5} that produce *identical* observed score frequencies — and therefore identical EM fits up to that nuisance parameter.
@@ -150,7 +143,7 @@ Worse, their analysis suggests **the fitted ellipse orientation tends to align w
 
 The implication is sobering: **the pro per-region anisotropy reported in OptimalDarts and analysed in Haugh & Wang 2022 should not be interpreted as "this pro is more accurate horizontally than vertically when throwing at T20."** It is a statistical fit to score data, with known identifiability issues; you cannot read the eigenvectors of the fitted Σ as biomechanical statements.
 
-For amateurs the same caveat technically applies, but the asymmetry is so large and so consistent across the two known datapoints — and the biomechanical explanation is so plausible — that we are comfortable treating "σ_y > σ_x in our convention" as a real signal for amateur-level players.
+For amateurs the same caveat technically applies, but the asymmetry is so large and so consistent across the two known datapoints — and the biomechanical explanation is so plausible — that we are comfortable treating "σ_y > σ_x" (vertical scatter > horizontal) as a real signal for amateur-level players.
 
 ### Our modelling choice (and we flag this as a choice, not a deduction)
 
@@ -161,7 +154,7 @@ We apply an anisotropy ratio at the **amateur** tiers (beginner, average, good) 
 
 A reader interested in the per-region Haugh & Wang model can use the matrices in `papers/OptimalDarts_repo/ALL_Model_Fits.mat` directly — our infrastructure supports diagonal Σ, and a small wrapper would let it consume the full 96-matrix table for the 16 PDC pros. We discuss this in §9 as a future extension.
 
-> [📊 **FIG-3.6**: A scatterplot with skill level on the x-axis (σ in mm, log scale) and σ_x / σ_y ratio on the y-axis. Points: the two Tibshirani amateurs (ratio ~1.6 and ~2.2), each of the 16 pros' pooled-across-region ratio, and the proposed-tier values from §8. A horizontal line at ratio = 1 marks isotropic. The plot should make visible that amateurs cluster well above 1 and pros cluster near 1.]
+> [📊 **FIG-3.6**: A scatterplot with skill level on the x-axis (σ in mm, log scale) and σ_y / σ_x ratio on the y-axis. Points: the two Tibshirani amateurs (ratio ~1.6 and ~2.2), each of the 16 pros' pooled-across-region ratio, and the proposed-tier values from §8. A horizontal line at ratio = 1 marks isotropic. The plot should make visible that amateurs cluster well above 1 and pros cluster near 1.]
 
 ## 7. Target dependence: how σ varies across the board
 
@@ -213,16 +206,16 @@ A motivated individual player who wants to refine the model has a clear path: th
 
 ## 8. The six-tier proposal (anchored, not arbitrary)
 
-Putting all of the above together, here is our proposed six-tier scheme. We give for each tier the **σ_x and σ_y in our convention (vertical, horizontal) and in normalised board units** so the values plug straight into our solver, plus the literature anchor that motivates the choice.
+Putting all of the above together, here is our proposed six-tier scheme. We give for each tier the **σ_x (horizontal) and σ_y (vertical) in normalised board units** so the values plug straight into our solver, plus the literature anchor that motivates the choice.
 
-| Tier              | σ_x (mm) | σ_y (mm) | σ_x norm | σ_y norm | Ratio σ_x/σ_y | Anchored on                                                                  |
+| Tier              | σ_x (mm) | σ_y (mm) | σ_x norm | σ_y norm | Ratio σ_y/σ_x | Anchored on                                                                  |
 |-------------------|----------|----------|----------|----------|----------------|-------------------------------------------------------------------------------|
 | **perfect**       | 0        | 0        | 0        | 0        | n/a            | mathematical limit; Tibshirani 2011 Figure 2 (σ=5 mm) is the closest empirical reference |
 | **world_champion**| 7        | 7        | 0.021    | 0.021    | 1.0 (isotropic; data limitation) | Best PDC pros at T20 (e.g. van Gerwen geometric-mean σ ≈ 7.3 mm at T20)        |
 | **professional**  | 9        | 9        | 0.026    | 0.026    | 1.0 (isotropic; data limitation) | Pooled mean of the 16 PDC top-16 across all six target regions (≈ 8.4 mm)     |
-| **good**          | 39       | 18       | 0.115    | 0.053    | 2.17           | Tibshirani Author 2 (decent amateur) full-Σ fit                              |
-| **average**       | 51       | 30       | 0.150    | 0.088    | 1.70           | Interpolation between Author 1 and Author 2; ratio chosen as the midpoint    |
-| **beginner**      | 69       | 43       | 0.203    | 0.126    | 1.60           | Tibshirani Author 1 (weak amateur) full-Σ fit                                 |
+| **good**          | 18       | 39       | 0.053    | 0.115    | 2.17           | Tibshirani Author 2 (decent amateur) full-Σ fit                              |
+| **average**       | 30       | 51       | 0.088    | 0.150    | 1.70           | Interpolation between Author 1 and Author 2; ratio chosen as the midpoint    |
+| **beginner**      | 43       | 69       | 0.126    | 0.203    | 1.60           | Tibshirani Author 1 (weak amateur) full-Σ fit                                 |
 
 Notes on the choices:
 

@@ -59,14 +59,16 @@ python scripts/click_hits.py path/to/your/photo.jpg
 
 The σ values are in normalised board units (multiply by 340 mm for millimetres). The tiers and their literature anchors are documented in [`ANALYSIS.md`](ANALYSIS.md) §10.7.
 
-| Player level | σ_x, σ_y | mm | best aim (board) | EV / dart | V(301) simple | V(501) official |
+Axis convention (matches Tibshirani 2011 and Haugh & Wang 2022/2024): **x = horizontal** (+x toward the 6 wedge, right), **y = vertical** (+y toward the 20 wedge, up). Both normalised to [-0.5, 0.5].
+
+| Player level | σ_x, σ_y | mm | best aim (x, y) | EV / dart | V(301) simple | V(501) official |
 |---|---|---|---|---|---|---|
 | `perfect`        | 0, 0          | 0    | T20 (any pixel) | **60.00** | **6.0** | **9.0** |
-| `world_champion` | 0.015, 0.015  | 5    | (+0.303, +0.000) — T20 | 42.62 | 7.7 | **13.1** |
-| `excellent`      | 0.02, 0.02    | 6.8  | (+0.303, +0.001) — T20 | 37.18 | 8.8 | — |
-| `good`           | 0.07, 0.07    | 23.8 | (-0.296, +0.114) — T19 region | 16.17 | 19.8 | **40.5** |
-| `average`        | 0.15, 0.09    | 51, 30 | (-0.042, +0.255) — near T11 | 13.52 | 25.3 | — |
-| `bad`            | 0.20, 0.20    | 68   | (-0.029, +0.076) — near bull | 12.04 | 33.1 | — |
+| `world_champion` | 0.015, 0.015  | 5    | (0.000, +0.303) — T20 | 42.62 | 7.7 | **13.1** |
+| `excellent`      | 0.02, 0.02    | 6.8  | (-0.001, +0.303) — T20 | 37.18 | 8.8 | — |
+| `good`           | 0.07, 0.07    | 23.8 | (-0.114, -0.296) — T19 region | 16.17 | 19.8 | **40.5** |
+| `average`        | 0.09, 0.15    | 30, 51 | (-0.255, -0.042) — near T11 | 13.52 | 25.3 | — |
+| `bad`            | 0.20, 0.20    | 68   | (-0.076, -0.028) — near bull | 12.04 | 33.1 | — |
 
 The lower three tiers are anchored on Tibshirani et al.'s empirical measurements (beginner σ≈65 mm, skilled amateur σ≈27 mm). `world_champion` (5 mm) matches Tibshirani's "perfect" pedagogical reference and the σ implied by peak-PDC pros' ~40% T20 hit rate; `perfect` (σ=0) is the mathematical upper bound — its EV map is literally the dartboard score field, and the 501 game closes in the canonical **9-darter**.
 

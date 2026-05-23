@@ -74,7 +74,7 @@ The classic result: the optimum migrates from triple-20 (for excellent players) 
 **Visualizations**
 - The full set of six EV heatmaps stacked.
 - The "optimum trail": a single board with a sequence of dots colored by σ, showing how the best aim walks. (`results/endgame/optimum_trail.png` — already generated.)
-- An "EV cross-section" — pick the line y = 0 (vertical line through the bull and T20) and plot EV(x, 0) for each tier. One chart, six curves, shows the peak structure clearly.
+- An "EV cross-section" — pick the line x = 0 (vertical line through the bull and T20) and plot EV(0, y) for each tier as a function of y. One chart, six curves, shows the peak structure clearly.
 - EV(σ) at canonical aim points: a line plot with x = σ (log scale), one line each for "aim at bull", "aim at T20", "aim at T19", "aim at optimum"; the crossing points are where strategy should change.
 
 ---
