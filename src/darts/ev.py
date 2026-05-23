@@ -21,7 +21,7 @@ from . import board
 class EvResult:
     """EV map plus metadata describing the grid it lives on."""
 
-    ev: np.ndarray            # shape (resolution, resolution), axis 0 = x, axis 1 = y
+    ev: np.ndarray            # (resolution, resolution): axis 0 = x (horizontal), axis 1 = y (vertical)
     resolution: int
     sigma_x: float
     sigma_y: float

@@ -1,9 +1,10 @@
 """Visualization helpers for the dart solver.
 
-Display convention matches the reference code: vertical axis = board x
-(positive toward the 20, i.e. up); horizontal axis = -board y (positive y is
-to the left). With this convention the dart cluster you'd visually expect
-appears where you'd expect on a real dartboard.
+Display convention: matplotlib's natural axes match the board axes one-to-one.
+Horizontal display axis = board ``x`` (positive to the right, toward the 6);
+vertical display axis = board ``y`` (positive upward, toward the 20). With
+this convention 20 sits at the top of every plot, 11 on the left, 6 on the
+right and 3 at the bottom — exactly as on a physical dartboard.
 """
 
 from __future__ import annotations
@@ -20,8 +21,12 @@ from .ev import EvResult
 
 
 def _board_angle_to_display_xy(theta_b: float, r: float) -> tuple[float, float]:
-    """Map a polar (theta_b, r) in board coords to display (horizontal, vertical)."""
-    return -math.sin(theta_b) * r, math.cos(theta_b) * r
+    """Map a polar (theta_b, r) in board coords to display (horizontal, vertical).
+
+    With the natural literature convention, display x = board x = r*cos(theta)
+    and display y = board y = r*sin(theta).
+    """
+    return math.cos(theta_b) * r, math.sin(theta_b) * r
 
 
 def draw_board(ax: Axes, *, with_numbers: bool = True) -> None:
@@ -78,9 +83,13 @@ def plot_ev_heatmap(
     ev = result.ev
     fig, ax = plt.subplots(figsize=figsize)
     ax.set_aspect("equal")
-    # Flip the y (column) axis so that positive board y ends up on the left.
+    # Data axis 0 = board x (horizontal). Data axis 1 = board y (vertical).
+    # imshow draws rows on the vertical axis and columns on the horizontal,
+    # so transpose so axis 1 (y) ends up on the vertical display axis. With
+    # origin="lower" y=+0.5 lands at the top of the image, matching the
+    # physical board (20 on top).
     im = ax.imshow(
-        ev[:, ::-1],
+        ev.T,
         origin="lower",
         extent=(-0.5, 0.5, -0.5, 0.5),
         cmap=cmap,
@@ -91,12 +100,11 @@ def plot_ev_heatmap(
 
     if mark_optimum:
         (best_x, best_y), best_ev = result.argmax_board()
-        disp_h, disp_v = -best_y, best_x
-        ax.plot(disp_h, disp_v, "o", color="white", markersize=12, markeredgecolor="black")
+        ax.plot(best_x, best_y, "o", color="white", markersize=12, markeredgecolor="black")
         ax.annotate(
             f"  best EV={best_ev:.2f}\n  aim=({best_x:.3f}, {best_y:.3f})",
-            xy=(disp_h, disp_v),
-            xytext=(disp_h + 0.05, disp_v + 0.05),
+            xy=(best_x, best_y),
+            xytext=(best_x + 0.05, best_y + 0.05),
             fontsize=10,
             color="white",
             bbox=dict(facecolor="black", alpha=0.6, edgecolor="none", pad=2),

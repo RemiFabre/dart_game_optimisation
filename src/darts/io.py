@@ -28,8 +28,8 @@ from .proba import ProbabilityCube
 _COMMON_METADATA = {
     "board_diameter_mm": board.TOTAL_DIAM,
     "extent_normalized": [-0.5, 0.5],
-    "axis_0": "x_board (toward 20, up)",
-    "axis_1": "y_board (toward 11, left)",
+    "axis_0": "x_board (horizontal; +x toward the 6, right)",
+    "axis_1": "y_board (vertical; +y toward the 20, up)",
 }
 
 

@@ -13,8 +13,10 @@ Workflow:
        finish — the script computes a Gaussian fit and prints sigma_x,
        sigma_y, rho, plus a copy-paste-ready snippet for the solver.
 
-Coordinates are reported in normalized board units (x in [-0.5, 0.5], with
-+x toward the 20).
+Coordinates are reported in normalized board units (x in [-0.5, 0.5],
+with +x toward the 6 wedge — i.e. horizontal-right — and +y toward the
+20 wedge — i.e. vertical-up). This matches the convention used in the
+literature (Tibshirani 2011; Haugh & Wang 2022, 2024).
 """
 
 from __future__ import annotations
@@ -49,17 +51,16 @@ class State:
 def _px_to_board(px: tuple[float, float], state: State) -> tuple[float, float]:
     """Convert pixel coordinates to normalized board coords.
 
-    Pixel y increases downward; board x increases upward. The chosen
-    convention (x = up = toward 20) follows the reference solver.
+    Pixel x increases to the right (same as board x). Pixel y increases
+    downward but board y increases upward, so the y axis is flipped.
     """
     assert state.centre_px is not None and state.px_per_mm is not None
     dx_px = px[0] - state.centre_px[0]
     dy_px = px[1] - state.centre_px[1]
-    # Map pixel offset (right, down) to board (x up, y left).
-    # We choose: board_x = -dy_px (so up in image = +x), board_y = -dx_px
-    # (so left in image = +y). Adjust if your camera orientation differs.
-    x_mm = -dy_px / state.px_per_mm
-    y_mm = -dx_px / state.px_per_mm
+    # board_x = +dx_px (right in image = +x = toward 6).
+    # board_y = -dy_px (up in image = +y = toward 20).
+    x_mm = dx_px / state.px_per_mm
+    y_mm = -dy_px / state.px_per_mm
     return x_mm / board.TOTAL_DIAM, y_mm / board.TOTAL_DIAM
 
 
@@ -166,17 +167,16 @@ def main() -> None:
         # Convert (board) covariance back to pixels for display.
         # 1 board unit = TOTAL_DIAM mm = TOTAL_DIAM * px_per_mm px.
         scale = board.TOTAL_DIAM * (state.px_per_mm or 1.0)
-        # Major-axis angle: vector in board coords -> map back to image.
-        # Board (x, y) -> image (px_x, px_y) = (-y*scale, -x*scale) + centre_px.
+        # Board (x, y) -> image (px_x, px_y) = (x*scale, -y*scale) + centre_px.
         for n_sigma in (1.0, 2.0):
             w = 2 * n_sigma * float(np.sqrt(eigvals[0])) * scale
             h = 2 * n_sigma * float(np.sqrt(eigvals[1])) * scale
             vx, vy = eigvecs[:, 0]
-            # Angle of (vx, vy) in board coords; same magnitude but axes swap for image.
-            angle_image = float(np.degrees(np.arctan2(-vx, -vy)))
+            # Board direction (vx, vy) -> image direction (vx, -vy).
+            angle_image = float(np.degrees(np.arctan2(-vy, vx)))
             centre_board = fit.mean
-            cx_img = state.centre_px[0] - centre_board[1] * scale
-            cy_img = state.centre_px[1] - centre_board[0] * scale
+            cx_img = state.centre_px[0] + centre_board[0] * scale
+            cy_img = state.centre_px[1] - centre_board[1] * scale
             artists.append(
                 ax.add_patch(
                     Ellipse(

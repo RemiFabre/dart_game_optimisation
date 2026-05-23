@@ -32,7 +32,8 @@ def _monte_carlo_ev(
     return mean, se
 
 
-T20_X = (board.TRIPLE_EXT_DIAM / 2 - board.BORDER / 2) / board.TOTAL_DIAM
+# The triple-20 wedge is at +y direction (vertical-up) in the new convention.
+T20_Y = (board.TRIPLE_EXT_DIAM / 2 - board.BORDER / 2) / board.TOTAL_DIAM
 
 
 @pytest.mark.parametrize(
@@ -42,10 +43,13 @@ T20_X = (board.TRIPLE_EXT_DIAM / 2 - board.BORDER / 2) / board.TOTAL_DIAM
         (0.0, 0.0, 0.02, 0.02),
         (0.0, 0.0, 0.07, 0.07),
         (0.0, 0.0, 0.20, 0.20),
-        # Triple-20 aim for an excellent player.
-        (T20_X, 0.0, 0.02, 0.02),
-        # The "good player" optimum from the reference README.
-        (-0.3, 0.12, 0.07, 0.07),
+        # Triple-20 aim for an excellent player (T20 is at +y).
+        (0.0, T20_Y, 0.02, 0.02),
+        # The "good player" optimum, near the triple-19 region. In the new
+        # convention, T19 is in the lower-right quadrant: x > 0, y < 0
+        # (the old reference reported the same physical point as
+        # (x_old=-0.3, y_old=0.12) → (x_new=-0.12, y_new=-0.3)).
+        (-0.12, -0.3, 0.07, 0.07),
         # Asymmetric sigma.
         (0.0, 0.0, 0.15, 0.09),
     ],
@@ -67,13 +71,16 @@ def test_fft_ev_agrees_with_monte_carlo(
 
 
 def test_fft_optimum_for_good_player_matches_reference() -> None:
-    """The reference README reports best aim (-0.3, 0.12) for sigma=0.07.
+    """The reference reports best aim (x_old=-0.3, y_old=0.12) for sigma=0.07.
 
-    The FFT optimum should land within a couple of pixels of that, and
-    its EV should be within a fraction of a point of the published 16.4.
+    In the new (literature) convention that physical point sits at
+    (x_new=-0.12, y_new=-0.3) — the triple-19 region in the lower-left
+    quadrant. The FFT optimum should land within a couple of pixels of
+    that, and its EV should be within a fraction of a point of the
+    published 16.4.
     """
     result = expected_value_map(0.07, 0.07, resolution=512)
     (best_x, best_y), best_ev = result.argmax_board()
-    assert abs(best_x - (-0.3)) < 0.05
-    assert abs(best_y - 0.12) < 0.05
+    assert abs(best_x - (-0.12)) < 0.05
+    assert abs(best_y - (-0.3)) < 0.05
     assert abs(best_ev - 16.4) < 0.5

@@ -27,7 +27,7 @@ PLAYERS = [
     ("world_champion", 0.015, 0.015, "tab:cyan"),
     ("excellent", 0.02, 0.02, "tab:blue"),
     ("good", 0.07, 0.07, "tab:green"),
-    ("average", 0.15, 0.09, "tab:orange"),
+    ("average", 0.09, 0.15, "tab:orange"),
     ("bad", 0.20, 0.20, "tab:red"),
 ]
 
@@ -148,10 +148,11 @@ def plot_optimum_trail(out_dir: Path) -> None:
         alpha=0,
     )
     draw_board(ax, with_numbers=True)
-    # Plot the trail.
-    disp_h = -aims[:, 1]
-    disp_v = aims[:, 0]
-    sc = ax.scatter(disp_h, disp_v, c=sigmas, cmap="viridis", s=60, edgecolors="white", linewidths=0.5, zorder=10)
+    # Plot the trail. Display x = board x, display y = board y.
+    sc = ax.scatter(
+        aims[:, 0], aims[:, 1], c=sigmas, cmap="viridis", s=60,
+        edgecolors="white", linewidths=0.5, zorder=10,
+    )
     cbar = fig.colorbar(sc, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("σ (player precision; smaller = better)")
     ax.set_title("Migration of the optimal aim point as the player's σ varies")

@@ -23,7 +23,7 @@ SIGMAS = [
     ("world_champion", 0.015, 0.015),
     ("excellent", 0.02, 0.02),
     ("good", 0.07, 0.07),
-    ("average", 0.15, 0.09),
+    ("average", 0.09, 0.15),
     ("bad", 0.20, 0.20),
 ]
 
