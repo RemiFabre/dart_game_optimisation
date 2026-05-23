@@ -1,7 +1,7 @@
 {
   "kind": "endgame_simple",
-  "sigma_x": 0.15,
-  "sigma_y": 0.09,
+  "sigma_x": 0.09,
+  "sigma_y": 0.15,
   "goal": 301,
   "resolution": 128,
   "v_units": "expected throws to finish (single-dart, no double-out, misses count as busts)",
@@ -11,6 +11,6 @@
     -0.5,
     0.5
   ],
-  "axis_0": "x_board (toward 20, up)",
-  "axis_1": "y_board (toward 11, left)"
+  "axis_0": "x_board (horizontal; +x toward the 6, right)",
+  "axis_1": "y_board (vertical; +y toward the 20, up)"
 }
